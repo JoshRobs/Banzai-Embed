@@ -1,0 +1,31 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 2,
+	"name": "banzaiembed/app",
+	"title": "BanzaiEmbed App",
+	"category": "embed",
+	"icon": "layout",
+	"description": "Embed a Vue, React or vanilla JavaScript app uploaded to BanzaiEmbed.",
+	"keywords": [ "vue", "react", "app", "javascript", "embed" ],
+	"textdomain": "banzaiembed",
+	"attributes": {
+		"app": {
+			"type": "string",
+			"default": ""
+		},
+		"mountId": {
+			"type": "string",
+			"default": ""
+		},
+		"inlineStyle": {
+			"type": "string",
+			"default": ""
+		}
+	},
+	"supports": {
+		"html": false,
+		"customClassName": true
+	},
+	"editorScript": "bzem-block-editor",
+	"editorStyle": "bzem-block-editor"
+}

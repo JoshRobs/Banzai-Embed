@@ -1,0 +1,155 @@
+/* BanzaiEmbed admin screens. */
+
+.bzem-wrap .bzem-columns {
+	display: flex;
+	gap: 20px;
+	align-items: flex-start;
+}
+
+.bzem-wrap .bzem-main {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.bzem-wrap .bzem-side {
+	flex: 0 0 320px;
+}
+
+@media (max-width: 960px) {
+	.bzem-wrap .bzem-columns {
+		flex-direction: column;
+	}
+
+	.bzem-wrap .bzem-side {
+		flex-basis: auto;
+		width: 100%;
+	}
+}
+
+.bzem-card {
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+	padding: 4px 20px 16px;
+	margin-bottom: 20px;
+}
+
+.bzem-card h2 {
+	font-size: 1.1em;
+}
+
+.bzem-empty {
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+	padding: 24px 32px;
+	margin-top: 20px;
+	max-width: 640px;
+}
+
+/* Status pills */
+.bzem-status {
+	display: inline-block;
+	padding: 2px 8px;
+	border-radius: 10px;
+	font-size: 12px;
+	line-height: 1.6;
+	vertical-align: middle;
+	background: #f0f0f1;
+	color: #50575e;
+}
+
+.bzem-status-ready {
+	background: #edfaef;
+	color: #00631d;
+}
+
+.bzem-status-needs-entry {
+	background: #fcf9e8;
+	color: #8a6100;
+}
+
+.bzem-col-shortcode {
+	width: 30%;
+}
+
+.bzem-shortcode {
+	user-select: all;
+}
+
+.bzem-shortcode-row {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+	flex-wrap: wrap;
+}
+
+/* Upload drop zone: a label wrapping the real file input. */
+.bzem-dropzone {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	min-height: 110px;
+	padding: 16px;
+	border: 2px dashed #8c8f94;
+	border-radius: 6px;
+	background: #f6f7f7;
+	text-align: center;
+	cursor: pointer;
+}
+
+.bzem-dropzone input[type="file"] {
+	position: absolute;
+	inset: 0;
+	opacity: 0;
+	cursor: pointer;
+}
+
+.bzem-dropzone.is-dragging,
+.bzem-dropzone:focus-within {
+	border-color: #2271b1;
+	background: #f0f6fc;
+}
+
+.bzem-dropzone.has-file {
+	border-style: solid;
+	border-color: #00a32a;
+}
+
+.bzem-dropzone-file {
+	font-weight: 600;
+}
+
+.bzem-method {
+	font-style: italic;
+	color: #50575e;
+}
+
+.bzem-files ul {
+	margin: 4px 0 12px;
+}
+
+.bzem-files li {
+	display: flex;
+	gap: 8px;
+	align-items: baseline;
+}
+
+.bzem-code {
+	background: #f6f7f7;
+	padding: 8px;
+	overflow-x: auto;
+	font-size: 12px;
+}
+
+.bzem-notice-list {
+	margin: 0 0 8px 20px;
+	list-style: disc;
+}
+
+.bzem-wrap .submitdelete {
+	color: #b32d2e;
+}

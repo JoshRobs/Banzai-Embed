@@ -11,7 +11,8 @@ includes/
   class-plugin.php              wires everything; fires bzem/init for pro modules
   class-app-manager.php         the banzaiembed_apps option, paths/URLs of builds, status, mount ID
   class-uploader.php            zip → build directory; the security boundary
-  class-asset-detector.php      finds entry JS/CSS + mount ID in a build
+  class-asset-detector.php      finds entry JS/CSS + mount ID + compiled base in a build
+  class-path-rewriter.php       points a build's asset references at its new location
   class-embed.php               mount div + enqueuing + window.banzaiEmbed; shared by shortcode and block
   class-shortcode.php           [banzai-embed] → Embed::render()
   class-block.php               banzaiembed/app → Embed::render(); editor data
@@ -61,7 +62,17 @@ No `.htaccess` is written to the uploads folder: with a restrictive `AllowOverri
 3. **asset-manifest.json** — `entrypoints` from Create React App / webpack. Classic scripts.
 4. **Filename patterns** — runtime, vendor, then index/main/app; the largest match wins, because Vite names lazy route chunks `index-*.js` too.
 
-Root-absolute references (`/assets/x.js`, Vite's default `base: '/'`) are resolved by finding the file in the build, and a warning explains that lazy chunks and CSS/JS-referenced assets will 404 until the app is rebuilt with `base: './'`.
+Root-absolute references (`/assets/x.js` for Vite's default `base: '/'`, or `/old/site/plugins/app/assets/x.js` for a build made for somewhere else) are resolved by finding the file in the build, and the prefix in front of it is reported as the build's `base`.
+
+## Relocating builds compiled for another path
+
+A build with a root-absolute base has that base baked into its JS and CSS — `url(/old/path/assets/Font.woff2)`, `` `/assets/hero.png` `` — and every one of those 404s under WordPress. When detection reports a base, `Path_Rewriter` rewrites them at upload time, in place, to the build's new location (root-relative, or the full URL when uploads are on another host).
+
+Only exact `{base}{file}` references to files that are **in the build** are rewritten. A bare base, or a path that is not one of the build's files, is left alone: `/app/` may be a router basename and `/assets/data` an API route on the site, and rewriting those would break the app in ways far harder to diagnose than a missing image.
+
+What remains unfixed is URLs built at runtime from the bare base string — Vite's preload helper (`return"/"+e`) and `import.meta.env.BASE_URL`. These only matter for lazy-loaded chunks, so the "rebuild with `base: './'`" warning is shown only when the build has JS beyond its entry files (`Path_Rewriter::needs_rebuild()`), and is recomputed when the entries change.
+
+Found on a real build: one compiled with `base: '/josh_staging_neu/wp-content/plugins/neudayquestionnaire/'` (its previous home) had 15 references to fonts and images in its CSS and JS; all 404'd before relocation and all load after.
 
 The mount ID comes from the first `id` on a `div`/`main`/`section` in index.html's `<body>` — `app` for Vite + Vue, `root` for Vite + React and CRA. **This is the default mount ID**, not the spec's generated `bzem-{slug}`: it is what the unmodified app's code targets. `bzem-{slug}` is only the fallback when there is no index.html.
 

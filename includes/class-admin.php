@@ -49,16 +49,23 @@ final class Admin {
 	private $detector;
 
 	/**
+	 * @var Path_Rewriter
+	 */
+	private $rewriter;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param App_Manager    $apps     App store.
 	 * @param Uploader       $uploader Zip extraction.
 	 * @param Asset_Detector $detector Entry detection.
+	 * @param Path_Rewriter  $rewriter Base-path relocation.
 	 */
-	public function __construct( App_Manager $apps, Uploader $uploader, Asset_Detector $detector ) {
+	public function __construct( App_Manager $apps, Uploader $uploader, Asset_Detector $detector, Path_Rewriter $rewriter ) {
 		$this->apps     = $apps;
 		$this->uploader = $uploader;
 		$this->detector = $detector;
+		$this->rewriter = $rewriter;
 	}
 
 	/**
@@ -368,6 +375,26 @@ final class Admin {
 		$app['detected_by']       = $found['detected_by'];
 		$app['detected_mount_id'] = $found['mount_id'];
 		$app['warnings']          = $found['warnings'];
+		$app['base']              = $found['base'];
+
+		if ( '' !== $found['base'] ) {
+			$moved = $this->rewriter->rewrite( $result['dir'], $found['base'], $this->apps->build_ref( $app['slug'], $app['build'] ) );
+
+			if ( $moved['references'] ) {
+				$this->notice(
+					'info',
+					sprintf(
+						/* translators: 1: base path such as "/" or "/my-app/", 2: number of references, 3: number of files. */
+						__( 'This build was compiled for the path %1$s, so %2$s references to its images, fonts and other files in %3$s JS/CSS files were pointed at their new location. Building with base: \'./\' avoids this step.', 'banzaiembed' ),
+						$found['base'],
+						number_format_i18n( $moved['references'] ),
+						number_format_i18n( $moved['files'] )
+					)
+				);
+			}
+		}
+
+		$app = $this->check_rebuild( $app );
 
 		// Keep the new build and the one before it, for pages cached in between.
 		$this->uploader->prune( $app['slug'], array_filter( array( $app['build'], $app['previous_build'] ) ) );
@@ -416,16 +443,33 @@ final class Admin {
 		}
 
 		if ( $scripts !== $app['scripts'] || $styles !== $app['styles'] ) {
-			$app['detected_by'] = 'manual';
-
 			// Detection's complaints were about what it found; the user has
-			// now chosen for themselves. The base-path problem is still real.
-			$app['warnings'] = array_values( array_intersect( $app['warnings'], array( Asset_Detector::rooted_warning() ) ) );
+			// now chosen for themselves.
+			$app['detected_by'] = 'manual';
+			$app['warnings']    = array();
 		}
 
 		$app['scripts']     = $scripts;
 		$app['styles']      = $styles;
 		$app['script_type'] = 'classic' === $type ? 'classic' : 'module';
+
+		return $this->check_rebuild( $app );
+	}
+
+	/**
+	 * Add or drop the "rebuild with a relative base" warning, which depends
+	 * on which scripts are entries and so can change when they do.
+	 *
+	 * @param array $app Record.
+	 * @return array Updated record.
+	 */
+	private function check_rebuild( array $app ) {
+		$warning         = Path_Rewriter::rebuild_warning( $app['base'] );
+		$app['warnings'] = array_values( array_diff( $app['warnings'], array( $warning ) ) );
+
+		if ( Path_Rewriter::needs_rebuild( $app, $this->apps->build_assets( $app ) ) ) {
+			$app['warnings'][] = $warning;
+		}
 
 		return $app;
 	}

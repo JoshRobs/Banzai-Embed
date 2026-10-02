@@ -229,6 +229,7 @@ The plugin is built. Where it departs from the spec above, it does so deliberate
 - **Default mount ID** is the one in the build's index.html (`app` / `root`), not `bzem-{slug}` — that is what unmodified app code targets.
 - **Cache-busting** is a new directory per upload (previous build kept for cached pages), not a `?ver=` query — a query string makes ES modules load twice.
 - **Scripts** are printed as `type="module"` (Vite) or `defer` (classic), detected per build.
+- **Builds compiled for another base** (`/` or an old path) have exact references to their own files rewritten at upload (`Path_Rewriter`) so images and fonts load. Bare base strings are never rewritten (router bases, API paths); builds with lazy chunks get a "rebuild with base './'" warning.
 - **Managing apps** needs `manage_options` + `unfiltered_html`. Only allowlisted static file types are ever written from a zip.
 - **Forms** post to admin-post.php, not AJAX.
 - **Not built:** the "use WP's bundled React" option (a build-time decision the plugin can't make). Pro features: only the license seam exists; Freemius is not initialised (no product ID yet).

@@ -60,6 +60,9 @@ final class App_Manager {
 			// index-html, vite-manifest, asset-manifest, pattern, manual or ''.
 			'detected_by'       => '',
 			'warnings'          => array(),
+			// Root-absolute base the build was compiled for ('/' or '/x/y/'),
+			// whose references Path_Rewriter relocated; '' if relative.
+			'base'              => '',
 			'created'           => 0,
 		);
 	}
@@ -304,6 +307,27 @@ final class App_Manager {
 	 */
 	public function build_url( $slug, $build ) {
 		return $this->base_url() . '/' . rawurlencode( $slug ) . '/' . rawurlencode( $build ) . '/';
+	}
+
+	/**
+	 * How a build's own files should refer to the build folder once
+	 * Path_Rewriter has relocated them: root-relative, so the same files keep
+	 * working over http and https and on any domain pointing at this site.
+	 * When uploads are served from another host (a CDN or offload plugin),
+	 * only the full URL works.
+	 *
+	 * @param string $slug  App slug.
+	 * @param string $build Build ID.
+	 * @return string With a trailing slash.
+	 */
+	public function build_ref( $slug, $build ) {
+		$url = $this->build_url( $slug, $build );
+
+		if ( wp_parse_url( $url, PHP_URL_HOST ) !== wp_parse_url( home_url(), PHP_URL_HOST ) ) {
+			return $url;
+		}
+
+		return (string) wp_parse_url( $url, PHP_URL_PATH );
 	}
 
 	/**

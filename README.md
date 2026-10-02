@@ -11,7 +11,9 @@ The product spec is [CLAUDE.md](CLAUDE.md). How it is built, and where and why i
 
 ## Preparing an app
 
-Build normally, with a **relative base** so the app works from `wp-content/uploads/banzaiembed/…`:
+Build normally and zip the contents of `dist/` (or the folder itself). Builds made with a root-absolute base — Vite's default `base: '/'`, or a path left over from wherever the app lived before — have their image, font and other asset references pointed at the new location on upload.
+
+A **relative base** is still the most robust choice, and the only one that keeps lazy-loaded chunks working (the plugin warns when a build has them):
 
 | Tool | Setting |
 | --- | --- |
@@ -19,11 +21,11 @@ Build normally, with a **relative base** so the app works from `wp-content/uploa
 | Create React App | `"homepage": "."` in `package.json` |
 | webpack 5 | `output.publicPath: 'auto'` |
 
-Zip the contents of `dist/` (or the folder itself) and upload it. The app mounts to the same element ID as in its `index.html`, so an unmodified `createApp(App).mount('#app')` or `createRoot(document.getElementById('root'))` works.
+ The app mounts to the same element ID as in its `index.html`, so an unmodified `createApp(App).mount('#app')` or `createRoot(document.getElementById('root'))` works.
 
 Two things need a small change in the app:
 
-- **Files referenced by absolute path** — e.g. `<use href="/icons.svg#…">` for something in Vite's `public/` — resolve against the site root and 404. Import the file instead, or prefix it with `window.banzaiEmbed['my-app'].baseUrl`.
+- **Files referenced by a hard-coded absolute path** — e.g. `<use href="/icons.svg#…">` written by hand for something in Vite's `public/`, in a build with a relative base — resolve against the site root and 404. Import the file instead, or prefix it with `window.banzaiEmbed['my-app'].baseUrl`.
 - **More than one instance per page** — the entry script runs once. Mount to each ID in `window.banzaiEmbed['my-app'].mounts`.
 
 ## Development

@@ -58,7 +58,7 @@ final class Plugin {
 	public function __construct() {
 		$this->apps  = new App_Manager();
 		$this->embed = new Embed( $this->apps );
-		$this->admin = new Admin( $this->apps, new Uploader( $this->apps ), new Asset_Detector() );
+		$this->admin = new Admin( $this->apps, new Uploader( $this->apps ), new Asset_Detector(), new Path_Rewriter() );
 	}
 
 	/**

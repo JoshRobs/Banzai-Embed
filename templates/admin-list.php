@@ -56,6 +56,14 @@ defined( 'ABSPATH' ) || exit;
 					</td>
 					<td data-colname="<?php esc_attr_e( 'Status', 'banzaiembed' ); ?>">
 						<span class="bzem-status bzem-status-<?php echo esc_attr( $status ); ?>"><?php echo esc_html( App_Manager::status_label( $status ) ); ?></span>
+						<?php if ( $app['warnings'] ) : ?>
+							<a class="bzem-warning-count" href="<?php echo esc_url( Admin::edit_url( $app['slug'] ) ); ?>">
+								<?php
+								/* translators: %s: number of warnings. */
+								echo esc_html( sprintf( _n( '%s warning', '%s warnings', count( $app['warnings'] ), 'banzaiembed' ), number_format_i18n( count( $app['warnings'] ) ) ) );
+								?>
+							</a>
+						<?php endif; ?>
 					</td>
 				</tr>
 			<?php endforeach; ?>

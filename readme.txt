@@ -25,9 +25,11 @@ BanzaiEmbed takes the build you already have — the contents of `dist/` or `bui
 * **Several apps per page.** Each gets its own mount point, and repeated instances get unique IDs.
 * **Painless updates.** Upload a new build and every URL changes, so no browser or CDN can serve stale files. The previous build is kept, so pages cached before the update keep working.
 
-**Build your app for a sub-folder**
+**Images and fonts just work**
 
-Your files are served from `wp-content/uploads/banzaiembed/…`, not the site root. Build with a relative base so lazy-loaded chunks and assets resolve:
+Your files are served from `wp-content/uploads/banzaiembed/…`, not the site root. If your build was made for the site root (Vite's default) or for another path, BanzaiEmbed points its image, font and other asset references at the new location when you upload it.
+
+For apps with lazy-loaded chunks, build with a relative base — BanzaiEmbed will tell you if yours needs it:
 
 * Vite: `base: './'` in `vite.config.js`
 * Create React App: `"homepage": "."` in `package.json`

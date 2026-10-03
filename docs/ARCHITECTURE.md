@@ -5,8 +5,8 @@ How BanzaiEmbed is put together, and the decisions behind it that are not obviou
 ## Layout
 
 ```
-banzaiembed.php                 bootstrap: constants, autoloader, bzem_has_valid_license(), plugins_loaded
-uninstall.php                   deletes the option and uploads/banzaiembed/ — on delete, never on deactivate
+banzaiembed.php                 bootstrap: Freemius (bzem_fs), constants, autoloader, bzem_has_valid_license(),
+                                plugins_loaded, bzem_uninstall() on Freemius' after_uninstall
 includes/
   class-plugin.php              wires everything; fires bzem/init for pro modules
   class-app-manager.php         the banzaiembed_apps option, paths/URLs of builds, status, mount ID
@@ -19,6 +19,7 @@ includes/
   class-admin.php               menu, list/edit screens, admin-post handlers, notices
   class-filesystem.php          the only code that touches the disk (WP_Filesystem_Direct)
   class-license.php             Freemius seam; fails closed
+vendor/freemius/                Freemius SDK (tracked; ships in the zip)
 blocks/app/block.json           block metadata (editor script registered by handle — no build step)
 templates/                      admin screens
 assets/js, assets/css           admin.js, block.js (plain ES5, wp.* globals), styles
@@ -101,7 +102,11 @@ window.banzaiEmbed["my-app"] = { slug, baseUrl, mountId, mounts: ["app", "app-2"
 
 ## Pro
 
-`License::PRO_AVAILABLE` is false and Freemius is not initialised — there is no product ID yet. `bzem_has_valid_license()` is the single gate and fails closed; `BZEM_SIMULATE_PRO` in wp-config.php opens it for development. When Freemius is set up, copy BanzaiStyle's main-file structure, including the `function_exists( 'banzaiembed_fs' )` / `else` wrapper — see the comment in banzaiembed.php.
+Freemius is initialised at the top of banzaiembed.php as `bzem_fs()` (product 40624, slug `banzaiembed`), with BanzaiStyle's structure: the rest of the file sits in the `else` of `function_exists( 'bzem_fs' )`, so when the free and premium copies are both active the second one only calls `set_basename()` instead of redeclaring every function. `tools/build.ps1` builds the premium zip; Freemius generates the free one from it.
+
+`bzem_has_valid_license()` is the single gate: `License::is_valid()` asks `bzem_fs()->can_use_premium_code()` and fails closed if the SDK is missing. `BZEM_SIMULATE_PRO` in wp-config.php opens it for development. `License::PRO_AVAILABLE` is still false — there are no pro features to sell yet, so no pro badges show.
+
+There is no uninstall.php. WordPress runs that file *instead of* a registered uninstall hook, and Freemius reports uninstalls through one, so its presence would hide every uninstall from Freemius. Cleanup is `bzem_uninstall()`, on Freemius' `after_uninstall` action.
 
 Notes for the pro features as specced:
 

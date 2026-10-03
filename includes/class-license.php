@@ -13,9 +13,8 @@ defined( 'ABSPATH' ) || exit;
  * Where the plugin's paid/free line is drawn.
  *
  * Same seam as BanzaiStyle's: one question the plugin asks, one place that
- * asks Freemius, failing closed when the SDK is not loaded. Until Freemius is
- * wired in (see the note in banzaiembed.php) it is always closed unless
- * BZEM_SIMULATE_PRO is defined.
+ * asks Freemius, failing closed when the SDK is not loaded. BZEM_SIMULATE_PRO
+ * opens it without a license, for development.
  */
 final class License {
 
@@ -50,10 +49,10 @@ final class License {
 		}
 
 		// Fail closed rather than fatal when the SDK is not in the build.
-		if ( ! function_exists( 'banzaiembed_fs' ) ) {
+		if ( ! function_exists( 'bzem_fs' ) ) {
 			return false;
 		}
 
-		return (bool) \banzaiembed_fs()->can_use_premium_code();
+		return (bool) \bzem_fs()->can_use_premium_code();
 	}
 }

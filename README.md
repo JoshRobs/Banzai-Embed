@@ -39,6 +39,20 @@ npx @wordpress/env stop
 
 Port 8890 keeps it clear of BanzaiStyle's wp-env on 8888.
 
+### Freemius licensing
+
+Three constants put a local install into Freemius' developer mode. Two are non-secret and live in [.wp-env.json](.wp-env.json): `WP_FS__DEV_MODE` and `WP_FS__SKIP_EMAIL_ACTIVATION`. The third is the plugin's **secret key**, which must not be committed. It goes in `.wp-env.override.json`, which is gitignored and never packaged by `tools/build.ps1`:
+
+```bash
+cp .wp-env.override.json.example .wp-env.override.json
+# paste the secret key from the Freemius dashboard, then
+npx @wordpress/env start
+```
+
+wp-env merges the override's `config` block over `.wp-env.json` and regenerates `wp-config.php` on every `start`. Check with `npx @wordpress/env run cli wp config list WP_FS__` (a substring match; it prints the secret key to your terminal).
+
+The constant name embeds the slug, case-sensitively: `WP_FS__banzaiembed_SECRET_KEY`. If the slug passed to `fs_dynamic_init()` is ever different, Freemius silently ignores the key.
+
 ### Tests
 
 End-to-end, against the wp-env site, through the real admin form:

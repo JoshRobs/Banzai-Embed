@@ -9,5 +9,9 @@ use BanzaiEmbed\Admin;
 
 defined( 'ABSPATH' ) || exit;
 ?>
-<h1><?php esc_html_e( 'App not found', 'banzaiembed' ); ?></h1>
-<p><a href="<?php echo esc_url( Admin::list_url() ); ?>"><?php esc_html_e( '&larr; Back to all apps', 'banzaiembed' ); ?></a></p>
+<hr class="wp-header-end">
+<div class="bzem-empty">
+	<h1><?php esc_html_e( 'App not found', 'banzaiembed' ); ?></h1>
+	<p><?php esc_html_e( 'It may have been deleted.', 'banzaiembed' ); ?></p>
+	<a class="button" href="<?php echo esc_url( Admin::list_url() ); ?>"><?php esc_html_e( 'Back to all apps', 'banzaiembed' ); ?></a>
+</div>

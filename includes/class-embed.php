@@ -90,7 +90,7 @@ final class Embed {
 		foreach ( self::find_slugs( $post->post_content ) as $slug ) {
 			$app = $this->apps->get( $slug );
 
-			if ( $app && 'ready' === App_Manager::status( $app ) ) {
+			if ( $app && 'ready' === App_Manager::status( $app ) && App_Manager::is_active( $app ) ) {
 				$this->enqueue( $app );
 			}
 		}
@@ -165,6 +165,11 @@ final class Embed {
 		if ( 'ready' !== App_Manager::status( $app ) ) {
 			/* translators: 1: app name, 2: status such as "No build uploaded". */
 			return $this->problem( sprintf( __( '"%1$s" is not ready to embed: %2$s.', 'banzaiembed' ), $app['name'], App_Manager::status_label( App_Manager::status( $app ) ) ) );
+		}
+
+		if ( ! App_Manager::is_active( $app ) ) {
+			/* translators: %s: app name. */
+			return $this->problem( sprintf( __( '"%s" is inactive, so visitors see nothing here. Activate it under BanzaiEmbed → All Apps.', 'banzaiembed' ), $app['name'] ) );
 		}
 
 		$id = isset( $args['id'] ) ? self::sanitize_id( $args['id'] ) : '';

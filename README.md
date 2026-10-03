@@ -1,4 +1,4 @@
-# BanzaiEmbed — Vue & React Apps
+# BanzaiEmbed — Vue & React App Embedder
 
 A WordPress plugin for embedding pre-built Vue, React or vanilla JS apps. Upload the build output as a zip; embed it with `[banzai-embed app="my-app"]` or the **BanzaiEmbed App** block. Nothing is compiled on the server.
 
@@ -11,7 +11,9 @@ The product spec is [CLAUDE.md](CLAUDE.md). How it is built, and where and why i
 
 ## Preparing an app
 
-Build normally, with a **relative base** so the app works from `wp-content/uploads/banzaiembed/…`:
+Build normally and zip the contents of `dist/` (or the folder itself). Builds made with a root-absolute base — Vite's default `base: '/'`, or a path left over from wherever the app lived before — have their image, font and other asset references pointed at the new location on upload.
+
+A **relative base** is still the most robust choice, and the only one that keeps lazy-loaded chunks working (the plugin warns when a build has them):
 
 | Tool | Setting |
 | --- | --- |
@@ -19,11 +21,11 @@ Build normally, with a **relative base** so the app works from `wp-content/uploa
 | Create React App | `"homepage": "."` in `package.json` |
 | webpack 5 | `output.publicPath: 'auto'` |
 
-Zip the contents of `dist/` (or the folder itself) and upload it. The app mounts to the same element ID as in its `index.html`, so an unmodified `createApp(App).mount('#app')` or `createRoot(document.getElementById('root'))` works.
+ The app mounts to the same element ID as in its `index.html`, so an unmodified `createApp(App).mount('#app')` or `createRoot(document.getElementById('root'))` works.
 
 Two things need a small change in the app:
 
-- **Files referenced by absolute path** — e.g. `<use href="/icons.svg#…">` for something in Vite's `public/` — resolve against the site root and 404. Import the file instead, or prefix it with `window.banzaiEmbed['my-app'].baseUrl`.
+- **Files referenced by a hard-coded absolute path** — e.g. `<use href="/icons.svg#…">` written by hand for something in Vite's `public/`, in a build with a relative base — resolve against the site root and 404. Import the file instead, or prefix it with `window.banzaiEmbed['my-app'].baseUrl`.
 - **More than one instance per page** — the entry script runs once. Mount to each ID in `window.banzaiEmbed['my-app'].mounts`.
 
 ## Development
@@ -36,6 +38,27 @@ npx @wordpress/env stop
 ```
 
 Port 8890 keeps it clear of BanzaiStyle's wp-env on 8888.
+
+### Freemius licensing
+
+Three constants put a local install into Freemius' developer mode. Two are non-secret and live in [.wp-env.json](.wp-env.json): `WP_FS__DEV_MODE` and `WP_FS__SKIP_EMAIL_ACTIVATION`. The third is the plugin's **secret key**, which must not be committed. It goes in `.wp-env.override.json`, which is gitignored and never packaged by `tools/build.ps1`:
+
+```bash
+cp .wp-env.override.json.example .wp-env.override.json
+# paste the secret key from the Freemius dashboard, then
+npx @wordpress/env start
+```
+
+wp-env merges the override's `config` block over `.wp-env.json` and regenerates `wp-config.php` on every `start`. Check with `npx @wordpress/env run cli wp config list WP_FS__` (a substring match; it prints the secret key to your terminal).
+
+The constant name embeds the slug, case-sensitively: `WP_FS__banzaiembed_SECRET_KEY`. If the slug passed to `fs_dynamic_init()` is ever different, Freemius silently ignores the key.
+
+To try the licensed and unlicensed paths without touching the real licence, force the gate either way (wp-env drops it again on the next `start`):
+
+```bash
+npx @wordpress/env run cli wp config set BZEM_SIMULATE_PRO false --raw   # or true
+npx @wordpress/env run cli wp config delete BZEM_SIMULATE_PRO
+```
 
 ### Tests
 

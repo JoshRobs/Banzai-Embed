@@ -5,21 +5,24 @@ How BanzaiEmbed is put together, and the decisions behind it that are not obviou
 ## Layout
 
 ```
-banzaiembed.php                 bootstrap: constants, autoloader, bzem_has_valid_license(), plugins_loaded
-uninstall.php                   deletes the option and uploads/banzaiembed/ — on delete, never on deactivate
+banzaiembed.php                 bootstrap: Freemius (bzem_fs), constants, autoloader, bzem_has_valid_license(),
+                                plugins_loaded, bzem_uninstall() on Freemius' after_uninstall
 includes/
   class-plugin.php              wires everything; fires bzem/init for pro modules
   class-app-manager.php         the banzaiembed_apps option, paths/URLs of builds, status, mount ID
   class-uploader.php            zip → build directory; the security boundary
-  class-asset-detector.php      finds entry JS/CSS + mount ID in a build
+  class-asset-detector.php      finds entry JS/CSS + mount ID + compiled base in a build
+  class-path-rewriter.php       points a build's asset references at its new location
   class-embed.php               mount div + enqueuing + window.banzaiEmbed; shared by shortcode and block
   class-shortcode.php           [banzai-embed] → Embed::render()
   class-block.php               banzaiembed/app → Embed::render(); editor data
   class-admin.php               menu, list/edit screens, admin-post handlers, notices
   class-filesystem.php          the only code that touches the disk (WP_Filesystem_Direct)
   class-license.php             Freemius seam; fails closed
-  class-data-bridge.php         pro: cfg.data, cfg.env, cfg.user() and the admin card behind them
-  class-custom-code.php         pro: per-app CSS, and JS before/after the app
+  class-site-wide__premium_only.php   Pro: site-wide placement and its rules (not in the free build)
+  class-data-bridge__premium_only.php Pro: cfg.data, cfg.env, cfg.user() and the admin card behind them
+  class-custom-code__premium_only.php Pro: per-app CSS, and JS before/after the app
+vendor/freemius/                Freemius SDK (tracked; ships in the zip)
 blocks/app/block.json           block metadata (editor script registered by handle — no build step)
 templates/                      admin screens
 assets/js, assets/css           admin.js, block.js (plain ES5, wp.* globals), styles
@@ -31,7 +34,9 @@ Naming follows BanzaiStyle's actual convention (not the spec's `banzaiembed_` ev
 
 ## Data
 
-One autoloaded option, `banzaiembed_apps`, keyed by slug. The record shape is `App_Manager::defaults()`; anything missing from a stored record is filled from it, so adding a field needs no migration.
+One autoloaded option, `banzaiembed_apps`, keyed by slug. The record shape is `App_Manager::defaults()`; anything missing from a stored record is filled from it, so adding a field needs no migration. Records saved before `active` and `modified` existed come back active, with `App_Manager::modified()` falling back to the upload or creation time.
+
+`active` is deliberately separate from `App_Manager::status()`: status says whether a build *can* be embedded (`ready`, `needs-entry`, `no-build`), active says whether the site owner *wants* it embedded right now.
 
 The slug cannot change after creation: shortcodes, blocks, the uploads path and `window.banzaiEmbed` keys all use it.
 
@@ -63,7 +68,17 @@ No `.htaccess` is written to the uploads folder: with a restrictive `AllowOverri
 3. **asset-manifest.json** — `entrypoints` from Create React App / webpack. Classic scripts.
 4. **Filename patterns** — runtime, vendor, then index/main/app; the largest match wins, because Vite names lazy route chunks `index-*.js` too.
 
-Root-absolute references (`/assets/x.js`, Vite's default `base: '/'`) are resolved by finding the file in the build, and a warning explains that lazy chunks and CSS/JS-referenced assets will 404 until the app is rebuilt with `base: './'`.
+Root-absolute references (`/assets/x.js` for Vite's default `base: '/'`, or `/old/site/plugins/app/assets/x.js` for a build made for somewhere else) are resolved by finding the file in the build, and the prefix in front of it is reported as the build's `base`.
+
+## Relocating builds compiled for another path
+
+A build with a root-absolute base has that base baked into its JS and CSS — `url(/old/path/assets/Font.woff2)`, `` `/assets/hero.png` `` — and every one of those 404s under WordPress. When detection reports a base, `Path_Rewriter` rewrites them at upload time, in place, to the build's new location (root-relative, or the full URL when uploads are on another host).
+
+Only exact `{base}{file}` references to files that are **in the build** are rewritten. A bare base, or a path that is not one of the build's files, is left alone: `/app/` may be a router basename and `/assets/data` an API route on the site, and rewriting those would break the app in ways far harder to diagnose than a missing image.
+
+What remains unfixed is URLs built at runtime from the bare base string — Vite's preload helper (`return"/"+e`) and `import.meta.env.BASE_URL`. These only matter for lazy-loaded chunks, so the "rebuild with `base: './'`" warning is shown only when the build has JS beyond its entry files (`Path_Rewriter::needs_rebuild()`), and is recomputed when the entries change.
+
+Found on a real build: one compiled with `base: '/josh_staging_neu/wp-content/plugins/neudayquestionnaire/'` (its previous home) had 15 references to fonts and images in its CSS and JS; all 404'd before relocation and all load after.
 
 The mount ID comes from the first `id` on a `div`/`main`/`section` in index.html's `<body>` — `app` for Vite + Vue, `root` for Vite + React and CRA. **This is the default mount ID**, not the spec's generated `bzem-{slug}`: it is what the unmodified app's code targets. `bzem-{slug}` is only the fallback when there is no index.html.
 
@@ -88,13 +103,37 @@ window.banzaiEmbed["my-app"] = { slug, baseUrl, mountId, mounts: ["app", "app-2"
 - Keyed by slug verbatim, not camel-cased as the spec sketched: `my-app` and `my_app` would collide as `myApp`.
 - `bzem/app_data` filters the object — the seam for the pro Data Bridge and environment variables.
 
-`id`, `class` and `style` attributes are sanitised (`[A-Za-z0-9_-]`, `sanitize_html_class`, `safecss_filter_attr`) because shortcodes can be written by Contributors. Problems (unknown slug, no build) are shown to users who can edit posts and render nothing for visitors.
+`id`, `class` and `style` attributes are sanitised (`[A-Za-z0-9_-]`, `sanitize_html_class`, `safecss_filter_attr`) because shortcodes can be written by Contributors. Problems (unknown slug, no build, app switched off) are shown to users who can edit posts and render nothing for visitors. An inactive app is also skipped by `prescan()`, so none of its assets load.
+
+## Admin screens
+
+Both screens share a brand bar and framework tabs (`templates/admin-header.php`), printed above `.wrap`; the `bzem-admin-page` body class, added only on our two screens (not Freemius' pages in the same menu), removes the content gutter so the bar runs edge to edge. The list is filtered, searched and sorted server-side from query arguments (`framework`, `status`, `s`, `orderby`, `order`) — there are few enough apps that `WP_List_Table`'s pagination machinery would be dead weight, but the markup keeps its classes so the core mobile layout applies.
+
+The on/off switch on each row is a tiny form posting to admin-post.php (`Admin::handle_toggle()`), so it works without JavaScript; admin.js submits the same form with `ajax=1` and gets JSON instead of a redirect. Read the form's URL with `getAttribute('action')`: its `<input name="action">` shadows `form.action`.
 
 ## Pro
 
-`License::PRO_AVAILABLE` is false and Freemius is not initialised — there is no product ID yet. `bzem_has_valid_license()` is the single gate and fails closed; `BZEM_SIMULATE_PRO` in wp-config.php opens it for development. When Freemius is set up, copy BanzaiStyle's main-file structure, including the `function_exists( 'banzaiembed_fs' )` / `else` wrapper — see the comment in banzaiembed.php.
+Freemius is initialised at the top of banzaiembed.php as `bzem_fs()` (product 40624, slug `banzaiembed`), with BanzaiStyle's structure: the rest of the file sits in the `else` of `function_exists( 'bzem_fs' )`, so when the free and premium copies are both active the second one only calls `set_basename()` instead of redeclaring every function. `tools/build.ps1` builds the premium zip; Freemius generates the free one from it.
 
-Pro modules are constructed in `Plugin::run()` only when the license is valid, so an unlicensed site runs none of their code. Their configuration stays on the app record when a license lapses; the app just stops receiving it. They plug into the free code through four seams: `bzem/app_data` (the app's object), `bzem/enqueued` (inline JS before the app), `bzem/edit_cards` (a card on the edit screen) and `bzem/save_app` (reading that card on save).
+`bzem_has_valid_license()` is the single gate: `License::is_valid()` asks `bzem_fs()->can_use_premium_code()` and fails closed if the SDK is missing. `BZEM_SIMULATE_PRO` in wp-config.php forces it open (`true`) or closed (`false`) for development, whatever the real licence says. `License::PRO_AVAILABLE` is still false, so the free build shows no Pro badges or upsells yet; flip it when the plan is on sale.
+
+### Keeping premium code out of the free build
+
+wp.org's guideline 5 forbids locked functionality in the free plugin, so premium code must not be *in* it. Freemius builds the free version from the premium zip by dropping files whose names contain `__premium_only` and stripping `if ( bzem_fs()->is__premium_only() ) { … }` blocks. Each Pro feature is therefore one `*__premium_only.php` class (plus its template), loaded from a single such block in `Plugin::run()`, and plugs in through hooks the free code fires anyway: `bzem/save_app`, `bzem/edit_placement`, `bzem/edit_cards`, `bzem/app_data`, `bzem/enqueued`. Nothing else in the free code may name a premium class.
+
+Shared data (record fields like `placement`, `rules`) and read-only display (the list's Placement column) stay in the free code: they describe what is stored, and an app left site-wide after switching back to the free build must still be shown honestly.
+
+### Site-wide placement
+
+`Site_Wide` (`includes/class-site-wide__premium_only.php`) prints apps whose `placement` is `site_wide` on every front-end page their rules match — no shortcode or block. Matching apps are worked out once per request: their assets are enqueued on `wp_enqueue_scripts` (CSS in `<head>`) and their mount points printed on `wp_footer` at priority 5, through `Embed::render()`, so `window.banzaiEmbed`, unique mount IDs and active/inactive all behave as for an embedded app. Nothing prints in wp-admin, feeds, oEmbed or JSON requests.
+
+Rules (`App_Manager::rules()`): post types (their *singular* views; empty means every page, archives and 404s included), excluded pages (matched against the queried page, or the posts page on a static-front-page site — never a term ID), and audience (everyone, logged-in, logged-out). `bzem/site_wide_matches` can override the result.
+
+Rendering checks that the premium code is present, **not** that the licence is valid: if a licence lapses, apps already placed site-wide keep showing, because a chat widget vanishing from a client's whole site overnight is the worst way to learn about a renewal. What needs a licence is *changing* placement to site-wide or editing rules — enforced in `Site_Wide::save()`, not just by the disabled form controls. Moving an app back to shortcode is always allowed. Whether Freemius still reports an expired licence as `can_use_premium_code()` depends on the plan's settings in the Freemius dashboard.
+
+There is no uninstall.php. WordPress runs that file *instead of* a registered uninstall hook, and Freemius reports uninstalls through one, so its presence would hide every uninstall from Freemius. Cleanup is `bzem_uninstall()`, on Freemius' `after_uninstall` action.
+
+Data Bridge and Custom CSS & JS follow the same licence rule as site-wide placement: what is saved keeps reaching the front end if a licence lapses (an app built to read `cfg.data` would otherwise break overnight), and only saving changes needs a licence — enforced in each module's `save()`. Unlicensed, their cards render with an info notice and a disabled `<fieldset>`; a disabled fieldset posts nothing, not even the card's marker field, so the saved settings are untouched. Beyond the hooks above they use `bzem/enqueued` (inline JS before the app) and `bzem/edit_cards` (cards below the entry files).
 
 ### Data Bridge (and environment variables)
 
@@ -127,7 +166,7 @@ Split by whether a page cache may store the value:
 - `</script` and `</style` are rewritten to `<\/script` / `<\/style`. That means the same inside a JS string, regex or comment and a CSS string; anywhere else the code was already broken. Nothing else is filtered: only users with `unfiltered_html` can save it.
 - 50 KB per field (it is in an autoloaded option); an oversized field keeps its previous value and the admin is told.
 
-When `License::PRO_AVAILABLE` is true and the license is not valid, the edit screen shows locked Data Bridge and Custom CSS & JS cards in their place.
+In the free build, when `License::PRO_AVAILABLE` is true, the edit screen shows upsell cards for Data Bridge and Custom CSS & JS in their place (as it does for Placement).
 
 ### Still to build
 

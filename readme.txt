@@ -1,10 +1,10 @@
-=== BanzaiEmbed — Vue & React Apps ===
+=== BanzaiEmbed — Vue & React App Embedder ===
 Contributors: joshuaroberts
 Tags: vue, react, shortcode, block, javascript
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.1.0
+Stable tag: 1.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -23,11 +23,14 @@ BanzaiEmbed takes the build you already have — the contents of `dist/` or `bui
 * **Your app mounts unmodified.** The mount element gets the same ID your `index.html` used — `#app` for Vite + Vue, `#root` for Vite + React — so the code you already have finds it.
 * **Loads only where it's used.** Scripts and styles are enqueued only on pages that embed the app, as ES modules for Vite builds and deferred scripts for webpack builds.
 * **Several apps per page.** Each gets its own mount point, and repeated instances get unique IDs.
+* **Switch apps on and off.** Turn an app off from the app list and it disappears from every page it is embedded on — no need to edit those pages — until you turn it back on.
 * **Painless updates.** Upload a new build and every URL changes, so no browser or CDN can serve stale files. The previous build is kept, so pages cached before the update keep working.
 
-**Build your app for a sub-folder**
+**Images and fonts just work**
 
-Your files are served from `wp-content/uploads/banzaiembed/…`, not the site root. Build with a relative base so lazy-loaded chunks and assets resolve:
+Your files are served from `wp-content/uploads/banzaiembed/…`, not the site root. If your build was made for the site root (Vite's default) or for another path, BanzaiEmbed points its image, font and other asset references at the new location when you upload it.
+
+For apps with lazy-loaded chunks, build with a relative base — BanzaiEmbed will tell you if yours needs it:
 
 * Vite: `base: './'` in `vite.config.js`
 * Create React App: `"homepage": "."` in `package.json`
@@ -59,5 +62,5 @@ Not in this version — the editor shows a placeholder, and the app runs on the 
 
 == Changelog ==
 
-= 0.1.0 =
-* First development release.
+= 1.0.0 =
+* Initial release.

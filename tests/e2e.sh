@@ -3,7 +3,8 @@
 #
 #   npx @wordpress/env start
 #   npx @wordpress/env run cli php wp-content/plugins/Banzai-Embed/tests/make-zips.php
-#   bash tests/e2e.sh
+#   bash tests/e2e.sh                 # every zip in tests/output
+#   bash tests/e2e.sh vue-subbase     # just these
 #
 # Creates one app per fixture (slug = fixture name) and prints where each
 # upload redirected to. Inspect the results with:
@@ -39,7 +40,14 @@ upload() { # slug framework zip
 		"$BASE/wp-admin/admin-post.php"
 }
 
-for zip in "$DIR"/output/*.zip; do
+# Every fixture, or just the ones named: bash tests/e2e.sh vue-subbase cra
+if [ $# -gt 0 ]; then
+	zips=(); for name in "$@"; do zips+=("$DIR/output/$name.zip"); done
+else
+	zips=("$DIR"/output/*.zip)
+fi
+
+for zip in "${zips[@]}"; do
 	slug="$(basename "$zip" .zip)"
 	fw=other
 	case "$slug" in vue*) fw=vue ;; react*|cra) fw=react ;; esac

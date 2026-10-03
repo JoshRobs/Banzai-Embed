@@ -28,10 +28,15 @@
 		var options = [{ value: "", label: __("Select an app…", "banzaiembed") }];
 
 		data.apps.forEach(function (app) {
-			options.push({
-				value: app.slug,
-				label: app.status === "ready" ? app.name : sprintf("%s (%s)", app.name, app.statusLabel),
-			});
+			var label = app.name;
+
+			if (app.status !== "ready") {
+				label = sprintf("%s (%s)", app.name, app.statusLabel);
+			} else if (!app.active) {
+				label = sprintf("%s (%s)", app.name, __("Inactive", "banzaiembed"));
+			}
+
+			options.push({ value: app.slug, label: label });
 		});
 
 		return options;
@@ -99,6 +104,9 @@
 				el("strong", null, app.name),
 				el("span", null, app.framework + " · #" + (attributes.mountId || app.mountId)),
 				app.status !== "ready" ? el("span", { className: "bzem-block-warning" }, app.statusLabel) : null,
+				app.status === "ready" && !app.active
+					? el("span", { className: "bzem-block-warning" }, __("Inactive — visitors see nothing until it is activated.", "banzaiembed"))
+					: null,
 				el("span", { className: "bzem-block-note" }, __("The app runs on the published page; the editor shows this placeholder.", "banzaiembed"))
 			);
 		}

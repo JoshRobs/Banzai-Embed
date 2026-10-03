@@ -24,7 +24,16 @@ foreach ( App_Manager::FRAMEWORKS as $fw ) {
 		<?php echo Admin::logo( 36 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG. ?>
 		<span class="bzem-brand-name">Banzai<span>Embed</span></span>
 	</a>
-	<span class="bzem-version">v<?php echo esc_html( BZEM_VERSION ); ?></span>
+	<div class="bzem-header-actions">
+		<?php
+		/**
+		 * Print controls at the right of the brand bar. Pro shows the
+		 * licence status here.
+		 */
+		do_action( 'bzem/header_actions' );
+		?>
+		<span class="bzem-version">v<?php echo esc_html( BZEM_VERSION ); ?></span>
+	</div>
 </div>
 
 <nav class="bzem-nav" aria-label="<?php esc_attr_e( 'BanzaiEmbed apps', 'banzaiembed' ); ?>">

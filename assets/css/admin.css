@@ -1526,3 +1526,60 @@
 	font-weight: 500;
 	white-space: nowrap;
 }
+
+/* ---------- Licence status in the brand bar (Pro) ---------- */
+
+.bzem-header-actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 10px;
+}
+
+.bzem-licence {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+}
+
+.bzem-licence .dashicons {
+	width: 16px;
+	height: 16px;
+	font-size: 16px;
+}
+
+.bzem-licence.is-active {
+	padding: 3px 12px 3px 9px;
+	border-radius: 999px;
+	background: var(--bzem-brand-h);
+	box-shadow: 0 1px 3px rgba(6, 43, 43, 0.18);
+	color: #062b2b;
+	font-size: 12px;
+	font-weight: 600;
+	text-decoration: none;
+}
+
+.bzem-licence.is-active .dashicons {
+	width: 13px;
+	height: 13px;
+	font-size: 13px;
+}
+
+a.bzem-licence.is-active:hover,
+a.bzem-licence.is-active:focus {
+	color: #062b2b;
+	filter: brightness(0.97);
+}
+
+.wp-core-ui .button.bzem-licence {
+	border-color: var(--bzem-accent);
+	color: var(--bzem-accent);
+}
+
+/* Core button styles nudge icons up; centre this one on the text. */
+.wp-core-ui .button.bzem-licence .dashicons {
+	margin: 0;
+	line-height: 1;
+	vertical-align: middle;
+}

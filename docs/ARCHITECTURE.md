@@ -23,6 +23,7 @@ includes/
   class-data-bridge__premium_only.php Pro: cfg.data, cfg.env, cfg.user() and the admin card behind them
   class-custom-code__premium_only.php Pro: per-app CSS, and JS before/after the app
   class-routing__premium_only.php     Pro: serves paths below a page to the app's client-side router
+  class-licence-ui__premium_only.php  Pro: licence status and "Activate licence" on BanzaiEmbed's screens
 vendor/freemius/                Freemius SDK (tracked; ships in the zip)
 blocks/app/block.json           block metadata (editor script registered by handle — no build step)
 templates/                      admin screens
@@ -133,6 +134,10 @@ Rules (`App_Manager::rules()`): post types (their *singular* views; empty means 
 Rendering checks that the premium code is present, **not** that the licence is valid: if a licence lapses, apps already placed site-wide keep showing, because a chat widget vanishing from a client's whole site overnight is the worst way to learn about a renewal. What needs a licence is *changing* placement to site-wide or editing rules — enforced in `Site_Wide::save()`, not just by the disabled form controls. Moving an app back to shortcode is always allowed. Whether Freemius still reports an expired licence as `can_use_premium_code()` depends on the plan's settings in the Freemius dashboard.
 
 There is no uninstall.php. WordPress runs that file *instead of* a registered uninstall hook, and Freemius reports uninstalls through one, so its presence would hide every uninstall from Freemius. Cleanup is `bzem_uninstall()`, on Freemius' `after_uninstall` action.
+
+### Licence activation
+
+Freemius puts "Activate License" only on the Plugins screen, and its Account page exists only after the opt-in — so someone who skipped the opt-in had no way to activate from BanzaiEmbed. `Licence_Ui` (premium build only) adds a status control to the brand bar through `bzem/header_actions`: an "Activate licence" button while unlicensed, a "Pro licence active" badge linking to the Account page once licensed; and an "Activate Licence" menu item while unlicensed, which opens the dialog on All Apps (`?bzem_activate=1`, dropped from the URL once used). Both open Freemius's own dialog (`forms/license-activation.php`), which binds to any `.activate-license-trigger.{unique affix}` element; its AJAX handler is registered on every admin page, so key checks, consent and sync all stay Freemius's. The free build has none of it — upgrading there goes through Upgrade and the premium install, where Freemius asks for the key.
 
 Data Bridge and Custom CSS & JS follow the same licence rule as site-wide placement: what is saved keeps reaching the front end if a licence lapses (an app built to read `cfg.data` would otherwise break overnight), and only saving changes needs a licence — enforced in each module's `save()`. Unlicensed, their cards render with an info notice and a disabled `<fieldset>`; a disabled fieldset posts nothing, not even the card's marker field, so the saved settings are untouched. Beyond the hooks above they use `bzem/enqueued` (inline JS before the app) and `bzem/edit_cards` (cards below the entry files).
 

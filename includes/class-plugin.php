@@ -81,10 +81,15 @@ final class Plugin {
 			require_once BZEM_PLUGIN_PATH . 'includes/class-data-bridge__premium_only.php';
 			require_once BZEM_PLUGIN_PATH . 'includes/class-custom-code__premium_only.php';
 			require_once BZEM_PLUGIN_PATH . 'includes/class-routing__premium_only.php';
+			require_once BZEM_PLUGIN_PATH . 'includes/class-licence-ui__premium_only.php';
 			( new Site_Wide( $this->apps, $this->embed ) )->register();
 			( new Data_Bridge( $this->apps ) )->register();
 			( new Custom_Code() )->register();
 			( new Routing( $this->apps ) )->register();
+
+			if ( is_admin() ) {
+				( new Licence_Ui() )->register();
+			}
 		}
 
 		/**

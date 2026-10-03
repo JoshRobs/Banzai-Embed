@@ -53,6 +53,13 @@ wp-env merges the override's `config` block over `.wp-env.json` and regenerates 
 
 The constant name embeds the slug, case-sensitively: `WP_FS__banzaiembed_SECRET_KEY`. If the slug passed to `fs_dynamic_init()` is ever different, Freemius silently ignores the key.
 
+To try the licensed and unlicensed paths without touching the real licence, force the gate either way (wp-env drops it again on the next `start`):
+
+```bash
+npx @wordpress/env run cli wp config set BZEM_SIMULATE_PRO false --raw   # or true
+npx @wordpress/env run cli wp config delete BZEM_SIMULATE_PRO
+```
+
 ### Tests
 
 End-to-end, against the wp-env site, through the real admin form:

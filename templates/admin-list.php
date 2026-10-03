@@ -110,7 +110,7 @@ $bzem_sort_link = static function ( $column, $label, $first ) use ( $query, $tab
 				<th scope="col" class="column-primary bzem-col-name"><?php $bzem_sort_link( 'name', __( 'Name', 'banzaiembed' ), 'asc' ); ?></th>
 				<th scope="col" class="bzem-col-framework"><?php esc_html_e( 'Framework', 'banzaiembed' ); ?></th>
 				<th scope="col" class="bzem-col-shortcode"><?php esc_html_e( 'Shortcode', 'banzaiembed' ); ?></th>
-				<th scope="col" class="bzem-col-mount"><?php esc_html_e( 'Mounts to', 'banzaiembed' ); ?></th>
+				<th scope="col" class="bzem-col-placement"><?php esc_html_e( 'Placement', 'banzaiembed' ); ?></th>
 				<th scope="col" class="bzem-col-build"><?php esc_html_e( 'Build', 'banzaiembed' ); ?></th>
 				<th scope="col" class="bzem-col-updated"><?php $bzem_sort_link( 'modified', __( 'Last updated', 'banzaiembed' ), 'desc' ); ?></th>
 				<th scope="col" class="bzem-col-active"><?php esc_html_e( 'Active', 'banzaiembed' ); ?></th>
@@ -159,8 +159,14 @@ $bzem_sort_link = static function ( $column, $label, $first ) use ( $query, $tab
 							</button>
 						</span>
 					</td>
-					<td class="bzem-col-mount" data-colname="<?php esc_attr_e( 'Mounts to', 'banzaiembed' ); ?>">
-						<code>#<?php echo esc_html( App_Manager::mount_id( $app ) ); ?></code>
+					<td class="bzem-col-placement" data-colname="<?php esc_attr_e( 'Placement', 'banzaiembed' ); ?>">
+						<?php if ( App_Manager::is_site_wide( $app ) ) : ?>
+							<span class="bzem-placement is-site-wide"><span class="dashicons dashicons-admin-site-alt3" aria-hidden="true"></span><?php esc_html_e( 'Site-wide', 'banzaiembed' ); ?></span>
+							<span class="bzem-subtle"><?php echo esc_html( App_Manager::rules_summary( $app ) ); ?></span>
+						<?php else : ?>
+							<span class="bzem-placement"><span class="dashicons dashicons-shortcode" aria-hidden="true"></span><?php esc_html_e( 'Shortcode', 'banzaiembed' ); ?></span>
+						<?php endif; ?>
+						<span class="bzem-subtle"><code>#<?php echo esc_html( App_Manager::mount_id( $app ) ); ?></code></span>
 					</td>
 					<td class="bzem-col-build" data-colname="<?php esc_attr_e( 'Build', 'banzaiembed' ); ?>">
 						<span class="bzem-status bzem-status-<?php echo esc_attr( $status ); ?>"><?php echo esc_html( App_Manager::status_label( $status ) ); ?></span>

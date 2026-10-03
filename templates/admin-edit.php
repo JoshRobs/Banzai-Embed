@@ -12,6 +12,7 @@
 
 use BanzaiEmbed\Admin;
 use BanzaiEmbed\App_Manager;
+use BanzaiEmbed\License;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -120,6 +121,29 @@ $default_mount = '' !== $record['detected_mount_id'] ? $record['detected_mount_i
 					</div>
 				</div>
 			</section>
+
+			<?php if ( has_action( 'bzem/edit_placement' ) ) : ?>
+				<?php
+				/**
+				 * Print the Placement card. Pro hooks in here.
+				 *
+				 * @param array $record The app being edited (defaults when new).
+				 * @param bool  $is_new Whether the app is being created.
+				 */
+				do_action( 'bzem/edit_placement', $record, $is_new );
+				?>
+			<?php elseif ( License::is_pro_available() ) : ?>
+				<section class="bzem-card bzem-upsell">
+					<header class="bzem-card-header">
+						<h2><?php esc_html_e( 'Placement', 'banzaiembed' ); ?></h2>
+						<span class="bzem-pro-badge"><?php esc_html_e( 'Pro', 'banzaiembed' ); ?></span>
+					</header>
+					<div class="bzem-card-body">
+						<p><?php esc_html_e( 'This app is placed with its shortcode or block. With BanzaiEmbed Pro, it can show site-wide instead — on every page, or only on the post types, pages and visitors you choose. Ideal for chat widgets, feedback buttons and announcement bars.', 'banzaiembed' ); ?></p>
+						<a class="button" href="<?php echo esc_url( bzem_fs()->get_upgrade_url() ); ?>"><?php esc_html_e( 'Upgrade to Pro', 'banzaiembed' ); ?></a>
+					</div>
+				</section>
+			<?php endif; ?>
 
 			<section class="bzem-card">
 				<header class="bzem-card-header">
@@ -230,6 +254,8 @@ $default_mount = '' !== $record['detected_mount_id'] ? $record['detected_mount_i
 
 					<?php if ( ! $is_new ) : ?>
 						<dl class="bzem-facts">
+							<dt><?php esc_html_e( 'Placement', 'banzaiembed' ); ?></dt>
+							<dd><?php echo App_Manager::is_site_wide( $record ) ? esc_html( __( 'Site-wide', 'banzaiembed' ) . ' · ' . App_Manager::rules_summary( $record ) ) : esc_html__( 'Shortcode or block', 'banzaiembed' ); ?></dd>
 							<dt><?php esc_html_e( 'Build', 'banzaiembed' ); ?></dt>
 							<dd><span class="bzem-status bzem-status-<?php echo esc_attr( $status ); ?>"><?php echo esc_html( App_Manager::status_label( $status ) ); ?></span></dd>
 							<?php if ( $has_build ) : ?>

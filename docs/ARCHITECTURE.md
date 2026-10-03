@@ -19,6 +19,7 @@ includes/
   class-admin.php               menu, list/edit screens, admin-post handlers, notices
   class-filesystem.php          the only code that touches the disk (WP_Filesystem_Direct)
   class-license.php             Freemius seam; fails closed
+  class-site-wide__premium_only.php   Pro: site-wide placement and its rules (not in the free build)
 vendor/freemius/                Freemius SDK (tracked; ships in the zip)
 blocks/app/block.json           block metadata (editor script registered by handle — no build step)
 templates/                      admin screens
@@ -112,7 +113,21 @@ The on/off switch on each row is a tiny form posting to admin-post.php (`Admin::
 
 Freemius is initialised at the top of banzaiembed.php as `bzem_fs()` (product 40624, slug `banzaiembed`), with BanzaiStyle's structure: the rest of the file sits in the `else` of `function_exists( 'bzem_fs' )`, so when the free and premium copies are both active the second one only calls `set_basename()` instead of redeclaring every function. `tools/build.ps1` builds the premium zip; Freemius generates the free one from it.
 
-`bzem_has_valid_license()` is the single gate: `License::is_valid()` asks `bzem_fs()->can_use_premium_code()` and fails closed if the SDK is missing. `BZEM_SIMULATE_PRO` in wp-config.php opens it for development. `License::PRO_AVAILABLE` is still false — there are no pro features to sell yet, so no pro badges show.
+`bzem_has_valid_license()` is the single gate: `License::is_valid()` asks `bzem_fs()->can_use_premium_code()` and fails closed if the SDK is missing. `BZEM_SIMULATE_PRO` in wp-config.php forces it open (`true`) or closed (`false`) for development, whatever the real licence says. `License::PRO_AVAILABLE` is still false, so the free build shows no Pro badges or upsells yet; flip it when the plan is on sale.
+
+### Keeping premium code out of the free build
+
+wp.org's guideline 5 forbids locked functionality in the free plugin, so premium code must not be *in* it. Freemius builds the free version from the premium zip by dropping files whose names contain `__premium_only` and stripping `if ( bzem_fs()->is__premium_only() ) { … }` blocks. Each Pro feature is therefore one `*__premium_only.php` class (plus its template), loaded from a single such block in `Plugin::run()`, and plugs in through hooks the free code fires anyway: `bzem/save_app`, `bzem/edit_placement`, `bzem/app_data`. Nothing else in the free code may name a premium class.
+
+Shared data (record fields like `placement`, `rules`) and read-only display (the list's Placement column) stay in the free code: they describe what is stored, and an app left site-wide after switching back to the free build must still be shown honestly.
+
+### Site-wide placement
+
+`Site_Wide` (`includes/class-site-wide__premium_only.php`) prints apps whose `placement` is `site_wide` on every front-end page their rules match — no shortcode or block. Matching apps are worked out once per request: their assets are enqueued on `wp_enqueue_scripts` (CSS in `<head>`) and their mount points printed on `wp_footer` at priority 5, through `Embed::render()`, so `window.banzaiEmbed`, unique mount IDs and active/inactive all behave as for an embedded app. Nothing prints in wp-admin, feeds, oEmbed or JSON requests.
+
+Rules (`App_Manager::rules()`): post types (their *singular* views; empty means every page, archives and 404s included), excluded pages (matched against the queried page, or the posts page on a static-front-page site — never a term ID), and audience (everyone, logged-in, logged-out). `bzem/site_wide_matches` can override the result.
+
+Rendering checks that the premium code is present, **not** that the licence is valid: if a licence lapses, apps already placed site-wide keep showing, because a chat widget vanishing from a client's whole site overnight is the worst way to learn about a renewal. What needs a licence is *changing* placement to site-wide or editing rules — enforced in `Site_Wide::save()`, not just by the disabled form controls. Moving an app back to shortcode is always allowed. Whether Freemius still reports an expired licence as `can_use_premium_code()` depends on the plan's settings in the Freemius dashboard.
 
 There is no uninstall.php. WordPress runs that file *instead of* a registered uninstall hook, and Freemius reports uninstalls through one, so its presence would hide every uninstall from Freemius. Cleanup is `bzem_uninstall()`, on Freemius' `after_uninstall` action.
 

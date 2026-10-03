@@ -75,6 +75,12 @@ final class Plugin {
 			$this->admin->register();
 		}
 
+		// Stripped from the free build by Freemius, file and all.
+		if ( bzem_fs()->is__premium_only() ) {
+			require_once BZEM_PLUGIN_PATH . 'includes/class-site-wide__premium_only.php';
+			( new Site_Wide( $this->apps, $this->embed ) )->register();
+		}
+
 		/**
 		 * Fires once the plugin is active. Pro modules hook here.
 		 *

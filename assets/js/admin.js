@@ -194,6 +194,66 @@
 	}
 
 	/**
+	 * Placement (Pro): show the rules only for site-wide apps, the post type
+	 * list only when limiting to post types, and filter long page lists.
+	 * Without this everything is simply visible.
+	 */
+	function initPlacement() {
+		var rules = document.querySelector("[data-bzem-rules]");
+
+		if (!rules) {
+			return;
+		}
+
+		var form = rules.closest("form");
+		var types = rules.querySelector("[data-bzem-scope-types]");
+
+		function checked(name) {
+			var input = form.querySelector('input[name="' + name + '"]:checked');
+			return input ? input.value : "";
+		}
+
+		function sync() {
+			rules.hidden = checked("placement") !== "site_wide";
+
+			if (types) {
+				types.hidden = checked("rules_scope") !== "post_types";
+			}
+		}
+
+		form.addEventListener("change", function (event) {
+			if (event.target.name === "placement" || event.target.name === "rules_scope") {
+				sync();
+			}
+		});
+		sync();
+
+		var filter = rules.querySelector(".bzem-page-filter");
+		var pages = rules.querySelector("[data-bzem-pages]");
+
+		if (!filter || !pages) {
+			return;
+		}
+
+		filter.hidden = false;
+
+		filter.addEventListener("input", function () {
+			var query = filter.value.trim().toLowerCase();
+
+			pages.querySelectorAll("label").forEach(function (label) {
+				label.hidden = query !== "" && label.textContent.toLowerCase().indexOf(query) === -1;
+			});
+		});
+
+		// Enter in the filter would otherwise submit the whole form.
+		filter.addEventListener("keydown", function (event) {
+			if (event.key === "Enter") {
+				event.preventDefault();
+			}
+		});
+	}
+
+	/**
 	 * The list's on/off switches post the same form without leaving the
 	 * page. The switch flips straight away and flips back if saving fails.
 	 */
@@ -276,5 +336,6 @@
 		initDropzone();
 		initEntryPicker();
 		initToggles();
+		initPlacement();
 	});
 })();

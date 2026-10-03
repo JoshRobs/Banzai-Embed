@@ -526,6 +526,15 @@ final class Admin {
 		$app['mount_id']  = $mount;
 		$app['active']    = ! empty( $_POST['active'] ); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- verified above.
 
+		/**
+		 * Filter an app record as the edit form saves it, after the nonce and
+		 * capability checks. Pro modules read their own fields from $_POST here.
+		 *
+		 * @param array $app    Record about to be saved.
+		 * @param bool  $is_new Whether the app is being created.
+		 */
+		$app = (array) apply_filters( 'bzem/save_app', $app, $is_new );
+
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- verified above.
 		$has_zip = isset( $_FILES['build'] ) && is_array( $_FILES['build'] ) && ! empty( $_FILES['build']['name'] );
 

@@ -31,6 +31,11 @@
 	}
 }
 
+/* Elements below set their own display, which would beat [hidden]. */
+.bzem-wrap [hidden] {
+	display: none !important;
+}
+
 /* ---------- Brand bar ---------- */
 
 .bzem-header {
@@ -541,11 +546,11 @@
 	}
 
 	.bzem-apps .bzem-col-shortcode {
-		width: 25%;
+		width: 21%;
 	}
 
-	.bzem-apps .bzem-col-mount {
-		width: 10%;
+	.bzem-apps .bzem-col-placement {
+		width: 14%;
 	}
 
 	.bzem-apps .bzem-col-build {
@@ -587,10 +592,36 @@
 	opacity: 1;
 }
 
-.bzem-col-mount code {
+.bzem-placement {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	color: var(--bzem-ink);
+	font-weight: 500;
+}
+
+.bzem-placement .dashicons {
+	width: 16px;
+	height: 16px;
+	color: var(--bzem-faint);
+	font-size: 16px;
+}
+
+.bzem-placement.is-site-wide .dashicons {
+	color: var(--bzem-accent);
+}
+
+.bzem-subtle {
+	display: block;
+	margin-top: 2px;
+	color: var(--bzem-muted);
+	font-size: 12px;
+}
+
+.bzem-subtle code {
 	padding: 0;
 	background: none;
-	color: #50575e;
+	color: inherit;
 	font-size: 12px;
 }
 
@@ -896,11 +927,6 @@
 	cursor: pointer;
 }
 
-.bzem-fw-option input {
-	position: absolute;
-	opacity: 0;
-}
-
 .bzem-fw-tile {
 	position: relative;
 	display: flex;
@@ -959,6 +985,178 @@
 .bzem-fw-option input:focus-visible + .bzem-fw-tile {
 	outline: 2px solid var(--bzem-accent);
 	outline-offset: 2px;
+}
+
+/* Placement (Pro). */
+.bzem-pro-badge {
+	padding: 1px 8px;
+	border-radius: 999px;
+	background: var(--bzem-brand);
+	color: #062b2b;
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
+}
+
+.bzem-placement-card .notice.inline {
+	margin: 0 0 16px;
+}
+
+.bzem-choice-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+	gap: 12px;
+	max-width: 620px;
+}
+
+.bzem-choice {
+	position: relative;
+	display: block;
+	cursor: pointer;
+}
+
+/* !important: core gives disabled radios opacity .7 with a stronger selector. */
+.bzem-choice input,
+.bzem-fw-option input {
+	position: absolute;
+	opacity: 0 !important;
+}
+
+.bzem-choice-tile {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 2px;
+	height: 100%;
+	padding: 14px 40px 14px 14px;
+	border: 1px solid var(--bzem-border);
+	border-radius: var(--bzem-radius);
+	background: #fff;
+	box-sizing: border-box;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.bzem-choice-tile .dashicons {
+	width: 24px;
+	height: 24px;
+	margin-bottom: 6px;
+	color: var(--bzem-accent);
+	font-size: 24px;
+}
+
+.bzem-choice-name {
+	color: var(--bzem-ink);
+	font-weight: 600;
+}
+
+.bzem-choice-hint {
+	color: var(--bzem-muted);
+	font-size: 12px;
+}
+
+.bzem-choice:hover .bzem-choice-tile {
+	border-color: var(--bzem-faint);
+}
+
+.bzem-choice input:checked + .bzem-choice-tile {
+	border-color: var(--bzem-accent);
+	background: var(--bzem-accent-soft);
+	box-shadow: 0 0 0 1px var(--bzem-accent);
+}
+
+.bzem-choice input:checked + .bzem-choice-tile::after {
+	content: "\f147";
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	width: 18px;
+	height: 18px;
+	border-radius: 50%;
+	background: var(--bzem-accent);
+	color: #fff;
+	font: normal 16px/18px dashicons;
+	text-align: center;
+}
+
+.bzem-choice input:focus-visible + .bzem-choice-tile {
+	outline: 2px solid var(--bzem-accent);
+	outline-offset: 2px;
+}
+
+.bzem-choice input:disabled + .bzem-choice-tile {
+	border-style: dashed;
+	background: var(--bzem-surface);
+	cursor: not-allowed;
+	opacity: 0.7;
+}
+
+.bzem-rules {
+	max-width: 620px;
+	margin-top: 22px;
+	padding-top: 22px;
+	border-top: 1px solid var(--bzem-rule);
+}
+
+.bzem-rules fieldset:disabled {
+	opacity: 0.6;
+}
+
+.bzem-radio-list {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.bzem-radio-list label {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.bzem-checklist {
+	display: flex;
+	flex-direction: column;
+	max-height: 220px;
+	margin-top: 8px;
+	padding: 6px;
+	overflow-y: auto;
+	border: 1px solid var(--bzem-border);
+	border-radius: 6px;
+	background: #fff;
+}
+
+.bzem-checklist label {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 5px 4px;
+	border-radius: 4px;
+}
+
+.bzem-checklist label:hover {
+	background: var(--bzem-surface);
+}
+
+.bzem-checklist-inline {
+	flex-direction: row;
+	flex-wrap: wrap;
+	gap: 4px 16px;
+	max-height: none;
+	margin: 8px 0 0 24px;
+	border: 0;
+	padding: 0;
+}
+
+.bzem-page-filter {
+	width: 100%;
+	max-width: 320px;
+}
+
+.bzem-tip-static {
+	padding: 4px 14px;
+	color: var(--bzem-muted);
 }
 
 /* Upload drop zone: a label wrapping the real file input. */

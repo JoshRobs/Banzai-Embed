@@ -63,8 +63,17 @@ final class App_Manager {
 			// Root-absolute base the build was compiled for ('/' or '/x/y/'),
 			// whose references Path_Rewriter relocated; '' if relative.
 			'base'              => '',
+			// Whether Path_Rewriter also pointed Vite's preload helper (which
+			// loads lazy chunks) at the build.
+			'preload_relocated' => false,
 			// Inactive apps render nothing on the front end.
 			'active'            => true,
+			// 'inline' (in the page) or 'frame' (its own document in an
+			// iframe; see Frame). Site-wide apps are always inline.
+			'display'           => 'inline',
+			// Frame height: 'auto' (follows the content), 'viewport', or a
+			// number of pixels as a string.
+			'frame_height'      => 'auto',
 			// 'shortcode' (placed by shortcode or block) or 'site_wide'
 			// (Pro: printed on every page its rules match).
 			'placement'         => 'shortcode',
@@ -81,6 +90,10 @@ final class App_Manager {
 			'routing'           => array(
 				'enabled' => false,
 				'pages'   => array(),
+			),
+			// Pro (API proxy): { path: '/api', target: 'https://…' } rules.
+			'proxy'             => array(
+				'rules' => array(),
 			),
 			// Pro (Custom CSS & JS).
 			'custom_code'       => array(
@@ -129,6 +142,33 @@ final class App_Manager {
 	 */
 	public static function is_site_wide( array $app ) {
 		return 'site_wide' === $app['placement'];
+	}
+
+	/**
+	 * Whether the app renders in its own document in an iframe. Never for a
+	 * site-wide app: chat bubbles and bars are positioned against the page.
+	 *
+	 * @param array $app Record.
+	 * @return bool
+	 */
+	public static function is_framed( array $app ) {
+		return 'frame' === $app['display'] && ! self::is_site_wide( $app );
+	}
+
+	/**
+	 * The frame height setting, valid whatever was stored.
+	 *
+	 * @param array $app Record.
+	 * @return string 'auto', 'viewport' or a number of pixels.
+	 */
+	public static function frame_height( array $app ) {
+		$height = (string) $app['frame_height'];
+
+		if ( 'viewport' === $height || ( ctype_digit( $height ) && (int) $height >= 50 && (int) $height <= 5000 ) ) {
+			return $height;
+		}
+
+		return 'auto';
 	}
 
 	/**

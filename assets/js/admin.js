@@ -194,63 +194,63 @@
 	}
 
 	/**
-	 * Data Bridge rows: add (cloning the section's <template>), remove, and
-	 * show the value field only for sources that take one.
+	 * Data Bridge and API proxy rows: add (cloning the section's <template>),
+	 * remove, and show the value field only for sources that take one.
 	 */
 	function initBridge() {
-		var card = document.querySelector(".bzem-bridge");
-
-		if (!card) {
-			return;
-		}
-
 		// Row indexes only need to be unique within one submit.
 		var next = Date.now();
 
-		function syncValue(select) {
-			var option = select.options[select.selectedIndex];
-			var input = select.closest("tr").querySelector(".bzem-bridge-value");
-			var placeholder = option && option.getAttribute("data-placeholder");
-
-			input.hidden = !placeholder;
-
-			if (placeholder) {
-				input.placeholder = placeholder;
-			}
-		}
-
-		card.addEventListener("change", function (event) {
-			if (event.target.matches(".bzem-bridge-source")) {
-				syncValue(event.target);
-			}
+		document.querySelectorAll(".bzem-bridge, .bzem-proxy").forEach(function (card) {
+			initRows(card);
 		});
 
-		card.addEventListener("click", function (event) {
-			var add = event.target.closest(".bzem-bridge-add");
-			var remove = event.target.closest(".bzem-bridge-remove");
+		function initRows(card) {
+			function syncValue(select) {
+				var option = select.options[select.selectedIndex];
+				var input = select.closest("tr").querySelector(".bzem-bridge-value");
+				var placeholder = option && option.getAttribute("data-placeholder");
 
-			if (add) {
-				// The add button's <p> follows the section's <template>.
-				var template = add.parentNode.previousElementSibling;
-				var rows = template.previousElementSibling.querySelector(".bzem-bridge-rows");
-				var html = template.innerHTML.replace(/__i__/g, String(next++));
+				input.hidden = !placeholder;
 
-				rows.insertAdjacentHTML("beforeend", html);
-				rows.lastElementChild.querySelector("input").focus();
-			} else if (remove) {
-				var row = remove.closest("tr");
-				var body = row.parentNode;
-
-				// Keep one row to type into; clearing it saves as "no rows".
-				if (body.children.length > 1) {
-					body.removeChild(row);
-				} else {
-					row.querySelectorAll("input").forEach(function (input) {
-						input.value = "";
-					});
+				if (placeholder) {
+					input.placeholder = placeholder;
 				}
 			}
-		});
+
+			card.addEventListener("change", function (event) {
+				if (event.target.matches(".bzem-bridge-source")) {
+					syncValue(event.target);
+				}
+			});
+
+			card.addEventListener("click", function (event) {
+				var add = event.target.closest(".bzem-bridge-add");
+				var remove = event.target.closest(".bzem-bridge-remove");
+
+				if (add) {
+					// The add button's <p> follows the section's <template>.
+					var template = add.parentNode.previousElementSibling;
+					var rows = template.previousElementSibling.querySelector(".bzem-bridge-rows");
+					var html = template.innerHTML.replace(/__i__/g, String(next++));
+
+					rows.insertAdjacentHTML("beforeend", html);
+					rows.lastElementChild.querySelector("input").focus();
+				} else if (remove) {
+					var row = remove.closest("tr");
+					var body = row.parentNode;
+
+					// Keep one row to type into; clearing it saves as "no rows".
+					if (body.children.length > 1) {
+						body.removeChild(row);
+					} else {
+						row.querySelectorAll("input").forEach(function (input) {
+							input.value = "";
+						});
+					}
+				}
+			});
+		}
 	}
 
 	/**
@@ -336,6 +336,37 @@
 	 * Routing (Pro): show the pages and usage only while routing is on, and
 	 * filter long page lists. Without this everything is simply visible.
 	 */
+	/**
+	 * Display: show the frame's options only while Isolated is chosen.
+	 */
+	function initDisplay() {
+		var options = document.querySelector("[data-bzem-frame-options]");
+		var radios = document.querySelectorAll("[data-bzem-display]");
+
+		if (!options || !radios.length) {
+			return;
+		}
+
+		function sync() {
+			var framed = document.querySelector("[data-bzem-display][value=frame]");
+
+			options.hidden = !framed.checked;
+		}
+
+		radios.forEach(function (radio) {
+			radio.addEventListener("change", sync);
+		});
+		sync();
+
+		// Typing a height means "fixed".
+		var px = options.querySelector("[name=frame_px]");
+		var fixed = options.querySelector("[name=frame_height][value=fixed]");
+
+		px.addEventListener("input", function () {
+			fixed.checked = true;
+		});
+	}
+
 	function initRouting() {
 		var toggle = document.querySelector("[data-bzem-routing-toggle]");
 		var details = document.querySelector("[data-bzem-routing-details]");
@@ -486,6 +517,7 @@
 		initEntryPicker();
 		initToggles();
 		initPlacement();
+		initDisplay();
 		initRouting();
 		initLicence();
 		initBridge();

@@ -13,6 +13,8 @@ includes/
   class-uploader.php            zip → build directory; the security boundary
   class-asset-detector.php      finds entry JS/CSS + mount ID + compiled base in a build
   class-path-rewriter.php       points a build's asset references at its new location
+  class-asset-redirect.php      redirects would-be 404s that name a file in an app's build to it
+  class-frame.php               serves an Isolated app's own document, loaded in an iframe
   class-embed.php               mount div + enqueuing + window.banzaiEmbed; shared by shortcode and block
   class-shortcode.php           [banzai-embed] → Embed::render()
   class-block.php               banzaiembed/app → Embed::render(); editor data
@@ -23,6 +25,7 @@ includes/
   class-data-bridge__premium_only.php Pro: cfg.data, cfg.env, cfg.user() and the admin card behind them
   class-custom-code__premium_only.php Pro: per-app CSS, and JS before/after the app
   class-routing__premium_only.php     Pro: serves paths below a page to the app's client-side router
+  class-api-proxy__premium_only.php   Pro: forwards an app's same-origin API paths (/api/…) to its real backend
   class-licence-ui__premium_only.php  Pro: licence status and "Activate licence" on BanzaiEmbed's screens
 vendor/freemius/                Freemius SDK (tracked; ships in the zip)
 blocks/app/block.json           block metadata (editor script registered by handle — no build step)
@@ -78,11 +81,37 @@ A build with a root-absolute base has that base baked into its JS and CSS — `u
 
 Only exact `{base}{file}` references to files that are **in the build** are rewritten. A bare base, or a path that is not one of the build's files, is left alone: `/app/` may be a router basename and `/assets/data` an API route on the site, and rewriting those would break the app in ways far harder to diagnose than a missing image.
 
-What remains unfixed is URLs built at runtime from the bare base string — Vite's preload helper (`return"/"+e`) and `import.meta.env.BASE_URL`. These only matter for lazy-loaded chunks, so the "rebuild with `base: './'`" warning is shown only when the build has JS beyond its entry files (`Path_Rewriter::needs_rebuild()`), and is recomputed when the entries change.
+One runtime use of the bare base is rewritten too: Vite's preload helper (`il=`modulepreload`,al=function(e){return`/`+e}`), which every lazy chunk goes through. It is found by its anchor — it always directly follows the `"modulepreload"` string — so no other `"/"+x` in the bundle is touched. The record's `preload_relocated` says whether it was found; the "rebuild with `base: './'`" warning (`Path_Rewriter::needs_rebuild()`) now only shows for a root-based build with lazy chunks whose helper was not found.
+
+## Root-path redirect
+
+Other URLs an app assembles at runtime can't be seen at upload: `import.meta.env.BASE_URL + 'pig.png'` (Vite compiles BASE_URL to a bare `"/"`), `` `/sounds/${name}` ``, `setDecoderPath('/draco/')`. They reach the server as `/pig.png`, and WordPress would 404. `Asset_Redirect` (free) hooks `pre_handle_404` at priority 5 — before Routing's claim, and before `redirect_canonical` could guess a post from the file name — and, when the request found nothing and its path names a file in an enabled app's current or previous build, 302s to that file.
+
+- Only would-be 404s, only GET/HEAD, and only paths whose last segment has a dot (WordPress slugs never do), so no page, post, feed or sitemap is ever shadowed. Root files that belong to the site (`robots.txt`, `favicon.ico`, `ads.txt`…) are never claimed.
+- Paths are tried with the build's compiled-for base removed, then as they are. Dotfile segments (so `..`, `.vite/`) and `index.html` are refused.
+- When two apps have the same path, the one whose build folder is the `Referer` (a stylesheet's `url()`, a chunk's `import`) wins, then the most recently uploaded. `bzem/asset_redirect_apps` filters the list; returning `[]` switches the redirect off.
+- The redirect is cacheable for 10 minutes only: its target changes with every upload, and builds older than the previous one are deleted.
+- It needs pretty permalinks and WordPress at the domain root, since an app built for `/` requests `/pig.png` whatever the site's path.
+
+Found on a real build: an unmodified Vite + Vue games app (base `/`, ~40 lazy chunks, Draco-compressed 3D models, sprite sheets from `BASE_URL`, `` `/counterspell/${name}` ``) loads every screen with no failed request — 11 references rewritten and the preload helper relocated at upload, everything else redirected.
 
 Found on a real build: one compiled with `base: '/josh_staging_neu/wp-content/plugins/neudayquestionnaire/'` (its previous home) had 15 references to fonts and images in its CSS and JS; all 404'd before relocation and all load after.
 
 The mount ID comes from the first `id` on a `div`/`main`/`section` in index.html's `<body>` — `app` for Vite + Vue, `root` for Vite + React and CRA. **This is the default mount ID**, not the spec's generated `bzem-{slug}`: it is what the unmodified app's code targets. `bzem-{slug}` is only the fallback when there is no index.html.
+
+## Isolated display (frames)
+
+Inline, an app shares the document with the theme: its global CSS (`body`, `h1`, `p`) restyles the site and the theme's restyles it, and a router built for `/` sees `/games/play/x`. Neither is fixable from outside without changing the app (Shadow DOM breaks `document.getElementById('app')` and Vite's CSS injection; patching router bases in minified bundles is version-fragile). So `display: 'frame'` gives the app its own document. Free; site-wide apps are always inline (bubbles and bars position against the page).
+
+**On the page**, `Embed::render()` prints a wrapper and an `<iframe>` instead of the mount div, enqueues none of the app's assets (prescan skips framed apps too), and loads `frame-host.js`. The frame's `src` is the app's root (its compiled-for base, else `/`) plus the route Routing claimed, if any: `/games/play/x` → `/play/x?bzem_frame=games.17`. Height: `auto` starts at `100vh` (what an app built to fill a page expects) and then follows the content; `viewport` stays `100vh`; or a fixed pixel height.
+
+**In the frame**, `Frame` answers on `do_parse_request` (priority 5, after the API proxy) any request carrying `bzem_frame=slug.post` for an active, framed app: a minimal document with the app's mount div, its styles and scripts printed by `wp_print_styles()`/`wp_print_scripts()` from exactly the handles `Embed::enqueue()` added (so the Data Bridge, environment variables and custom CSS/JS all work inside), and `frame-client.js` first. The post in the marker becomes the main query when this visitor may read it (and its password isn't required), so the Data Bridge's post values match the page. `cfg.basePath` is the frame root (`""` for `/`) and `cfg.framed` is true. Headers: `X-Frame-Options: SAMEORIGIN` and `frame-ancestors 'self'` (overriding a security plugin's DENY for this document only), `X-Robots-Tag: noindex`.
+
+**Keeping the frame a frame.** The marker has to survive the app's navigation, or a reload inside the frame (Dropout calls `location.reload()`) would load WordPress's 404 into it. `frame-client.js` wraps `pushState`/`replaceState` to keep `bzem_frame` on every same-origin URL the router pushes — routes ignore an unknown query arg. A full navigation that drops it (a plain `<a>`, `location.href`) is recognised by `Sec-Fetch-Dest: iframe` plus a same-site Referer carrying the marker; the document then carries it in a `<meta>`, and the client puts it back into the URL before the router reads it. Browsers without `Sec-Fetch-Dest` fall through to whatever WordPress has at that path.
+
+**Talking to the page** is `postMessage` to the site's own origin, both ways. The client reports `route` (path without the marker) on every history change, popstate and hashchange, and `size`: the bottom of body's last non-fixed child plus body's padding and margin, not body's own height — `body { min-height: 100vh }` inside a frame is the frame's height and could only grow. More than 12 increases in 2 s means content sized from the frame itself; the client stops reporting. The host sets the height (auto only) and, when Routing set a `basePath` for the page, mirrors the route into the address bar with `replaceState` — never `pushState`, since the frame's own navigation already made the history entry the back button uses. The host greets each frame on load so reports sent before it was listening are repeated.
+
+Tested with the unmodified Dropout build on a routed page: every screen renders with no failed request; the theme keeps its own styles and the app's are not on the page; in-app links, back, deep links (`/games/play/the-dice-game` opens that game, 3D and all), `location.reload()` and a plain link inside the frame all land on the right screen with the address bar following.
 
 ## Rendering
 
@@ -172,7 +201,7 @@ Split by whether a page cache may store the value:
 - `</script` and `</style` are rewritten to `<\/script` / `<\/style`. That means the same inside a JS string, regex or comment and a CSS string; anywhere else the code was already broken. Nothing else is filtered: only users with `unfiltered_html` can save it.
 - 50 KB per field (it is in an autoloaded option); an oversized field keeps its previous value and the admin is told.
 
-In the free build, when `License::PRO_AVAILABLE` is true, the edit screen shows upsell cards for Data Bridge and Custom CSS & JS in their place (as it does for Placement and Routing).
+In the free build, when `License::PRO_AVAILABLE` is true, the edit screen shows upsell cards for Data Bridge, API proxy and Custom CSS & JS in their place (as it does for Placement and Routing).
 
 ### Routing
 
@@ -188,6 +217,20 @@ In the free build, when `License::PRO_AVAILABLE` is true, the edit screen shows 
 So a real child page (`/portal/help/`) is never claimed — it isn't a 404 — and nothing breaks when a page is renamed or moved, because prefixes come from `get_page_uri()` on each request (only requests that would 404 pay for it). Tested under `/%postname%/` and date-based structures, which reach the 404 by different rules.
 
 Rules: pages only, not the front page or posts page (routing under the site root would claim every 404 on the site); one app per page; pretty permalinks required (the card says so otherwise). Every route returns 200 with the page's own canonical URL, so the app's router must provide its own "not found" screen. `bzem/route_match` can veto or change a match. Same lapsed-licence rule as the other pro features.
+
+### API proxy
+
+`Api_Proxy` — not in the spec; stored as `proxy` on the record (`{ rules: [{ path, target }] }`). An app built for Netlify, Vercel or a dev-server proxy calls its backend as `fetch('/api/judge')`, a path on whatever site serves it; on WordPress that is a 404. A rule `/api` → `https://my-app.netlify.app/api` forwards it, so the app's code doesn't change, and since the browser only talks to its own origin there is no CORS.
+
+- **Matching:** domain-root paths, as the app writes them; a rule takes its path and everything below it by whole segments (`/api` takes `/api/judge`, not `/apiary`); longest wins across enabled apps. What follows the rule path and the raw query string are appended to the target.
+- **When:** `do_parse_request` at priority 1 — before WordPress resolves the request, so a forwarded call runs no query — then `exit`. The cost on every other request is one prefix compare per rule.
+- **Save-time guards:** a rule path can't be `/`, anything under (or above) `wp-admin`, `wp-content`, `wp-includes`, the REST prefix, `wp-login.php` and the other root scripts, outside the site's own path when WordPress is in a subdirectory, or an existing page — because the rule would win over it. One app per path. Targets must be absolute http(s) URLs with no query, fragment or credentials, and not this site (that would loop). Up to 20 rules per app.
+- **Request-time guards:** `.`/`..` segments in what follows the rule path, raw or percent-encoded, and backslashes are refused (400), and the final URL's host must still be the target's. Methods are allowlisted. The body is capped at 10 MB (`bzem/proxy_max_body`), the wait at 30 s (`bzem/proxy_timeout`); upstream redirects are not followed but passed back, with a `Location` under the target rewritten to the proxy path.
+- **Forwarded:** method, body, `Content-Type`, `Accept`, `Accept-Language`, `Authorization`, conditional and `Range` headers, `User-Agent`, and the app's own `X-` headers — plus `X-Forwarded-For/Host/Proto`. **Never:** `Cookie` (the visitor's WordPress login) or `X-WP-Nonce`. **Back:** status, body, and an allowlist of response headers; never `Set-Cookie`, which would land on the WordPress domain. With no `Cache-Control` from upstream, the answer gets `no-store` and `DONOTCACHEPAGE`.
+- `bzem/proxy_request` can change the request — e.g. add a server-side API key the browser never sees — or refuse it with a `WP_Error`.
+- Targets are entered by admins with `unfiltered_html`, so `wp_remote_request()` is used rather than the "safe" variant: a staging API on a private address is a legitimate target. Apache answers 500 for status codes it doesn't know (418); every standard code is relayed.
+
+Same lapsed-licence rule as the other pro features: rules keep forwarding, changing them needs a licence.
 
 ## What is not built
 

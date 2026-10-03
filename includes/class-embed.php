@@ -90,7 +90,8 @@ final class Embed {
 		foreach ( self::find_slugs( $post->post_content ) as $slug ) {
 			$app = $this->apps->get( $slug );
 
-			if ( $app && 'ready' === App_Manager::status( $app ) && App_Manager::is_active( $app ) ) {
+			// A framed app's CSS loads inside its frame, never on the page.
+			if ( $app && 'ready' === App_Manager::status( $app ) && App_Manager::is_active( $app ) && ! App_Manager::is_framed( $app ) ) {
 				$this->enqueue( $app );
 			}
 		}
@@ -187,6 +188,14 @@ final class Embed {
 
 		$style = isset( $args['style'] ) ? safecss_filter_attr( (string) $args['style'] ) : '';
 
+		if ( App_Manager::is_framed( $app ) ) {
+			$classes[] = 'bzem-frame-wrap';
+			$html      = $this->render_frame( $app, $id, $classes, $style );
+
+			/** This filter is documented below. */
+			return (string) apply_filters( 'bzem/mount_html', $html, $app, $id );
+		}
+
 		$handle = $this->enqueue( $app );
 		wp_add_inline_script(
 			$handle,
@@ -254,22 +263,7 @@ final class Embed {
 			}
 		}
 
-		$data = array(
-			'slug'    => $slug,
-			'baseUrl' => $this->apps->build_url( $slug, $app['build'] ),
-			'mountId' => App_Manager::mount_id( $app ),
-			'mounts'  => array(),
-		);
-
-		/**
-		 * Filter the object an app sees as window.banzaiEmbed[slug].
-		 *
-		 * The seam the Data Bridge and environment variables plug into.
-		 *
-		 * @param array $data Data.
-		 * @param array $app  App record.
-		 */
-		$data = apply_filters( 'bzem/app_data', $data, $app );
+		$data = $this->app_data( $app );
 
 		// Tags hex-escaped: values can come from post meta that authors write,
 		// and "<!--" or "<script" in an inline script derails the HTML parser.
@@ -292,6 +286,79 @@ final class Embed {
 		$this->enqueued[ $slug ] = $first;
 
 		return $first;
+	}
+
+	/**
+	 * The object an app sees as window.banzaiEmbed[slug].
+	 *
+	 * @param array $app Record.
+	 * @return array
+	 */
+	public function app_data( array $app ) {
+		$data = array(
+			'slug'    => $app['slug'],
+			'baseUrl' => $this->apps->build_url( $app['slug'], $app['build'] ),
+			'mountId' => App_Manager::mount_id( $app ),
+			'mounts'  => array(),
+		);
+
+		/**
+		 * Filter the object an app sees as window.banzaiEmbed[slug].
+		 *
+		 * The seam the Data Bridge and environment variables plug into.
+		 *
+		 * @param array $data Data.
+		 * @param array $app  App record.
+		 */
+		return (array) apply_filters( 'bzem/app_data', $data, $app );
+	}
+
+	/**
+	 * A framed app's placeholder on the page: a wrapper and the iframe that
+	 * loads the app's own document (see Frame).
+	 *
+	 * The frame starts at the app's route when Routing claimed this request
+	 * (/games/play/x → /play/x in the frame), and frame-host.js keeps the
+	 * address bar following the app's router while Routing is on.
+	 *
+	 * @param array    $app     Record.
+	 * @param string   $id      Wrapper ID.
+	 * @param string[] $classes Wrapper classes.
+	 * @param string   $style   Sanitised inline style for the wrapper.
+	 * @return string
+	 */
+	private function render_frame( array $app, $id, array $classes, $style ) {
+		$data   = $this->app_data( $app );
+		$routed = isset( $data['basePath'] );
+		$route  = $routed && isset( $data['route'] ) ? (string) $data['route'] : '';
+		$post   = is_singular() ? (int) get_queried_object_id() : 0;
+		$height = App_Manager::frame_height( $app );
+
+		$config = array(
+			'slug'   => $app['slug'],
+			'root'   => Frame::root( $app ),
+			// Where the page's routes start, if the address bar should follow.
+			'base'   => $routed ? (string) $data['basePath'] : null,
+			'height' => $height,
+		);
+
+		wp_enqueue_script( 'bzem-frame-host', BZEM_PLUGIN_URL . 'assets/js/frame-host.js', array(), BZEM_VERSION, true );
+
+		// 'auto' starts at the window's height too — what an app built to
+		// fill a page expects — and frame-host.js then follows the content.
+		$css = ctype_digit( $height ) ? 'height:' . (int) $height . 'px;' : 'height:100vh;';
+
+		return sprintf(
+			'<div id="%1$s" class="%2$s" data-bzem-app="%3$s"%4$s><iframe src="%5$s" title="%6$s" data-bzem-frame="%7$s" style="%8$s" allow="fullscreen; autoplay; clipboard-read; clipboard-write" allowfullscreen></iframe></div>',
+			esc_attr( $id ),
+			esc_attr( implode( ' ', array_unique( $classes ) ) ),
+			esc_attr( $app['slug'] ),
+			'' !== $style ? ' style="' . esc_attr( $style ) . '"' : '',
+			esc_url( Frame::src( $app, $route, $post ) ),
+			esc_attr( $app['name'] ),
+			esc_attr( wp_json_encode( $config ) ),
+			esc_attr( 'display:block;width:100%;border:0;' . $css )
+		);
 	}
 
 	/**

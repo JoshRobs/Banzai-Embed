@@ -70,6 +70,8 @@ final class Plugin {
 		$this->embed->register();
 		( new Shortcode( $this->embed ) )->register();
 		( new Block( $this->embed, $this->apps ) )->register();
+		( new Asset_Redirect( $this->apps ) )->register();
+		( new Frame( $this->apps, $this->embed ) )->register();
 
 		if ( is_admin() ) {
 			$this->admin->register();
@@ -81,11 +83,13 @@ final class Plugin {
 			require_once BZEM_PLUGIN_PATH . 'includes/class-data-bridge__premium_only.php';
 			require_once BZEM_PLUGIN_PATH . 'includes/class-custom-code__premium_only.php';
 			require_once BZEM_PLUGIN_PATH . 'includes/class-routing__premium_only.php';
+			require_once BZEM_PLUGIN_PATH . 'includes/class-api-proxy__premium_only.php';
 			require_once BZEM_PLUGIN_PATH . 'includes/class-licence-ui__premium_only.php';
 			( new Site_Wide( $this->apps, $this->embed ) )->register();
 			( new Data_Bridge( $this->apps ) )->register();
 			( new Custom_Code() )->register();
 			( new Routing( $this->apps ) )->register();
+			( new Api_Proxy( $this->apps ) )->register();
 
 			if ( is_admin() ) {
 				( new Licence_Ui() )->register();

@@ -23,14 +23,15 @@ BanzaiEmbed takes the build you already have — the contents of `dist/` or `bui
 * **Your app mounts unmodified.** The mount element gets the same ID your `index.html` used — `#app` for Vite + Vue, `#root` for Vite + React — so the code you already have finds it.
 * **Loads only where it's used.** Scripts and styles are enqueued only on pages that embed the app, as ES modules for Vite builds and deferred scripts for webpack builds.
 * **Several apps per page.** Each gets its own mount point, and repeated instances get unique IDs.
+* **Isolated display for apps built to run on their own.** Show an app in the page, or give it its own page in a frame. Isolated, its CSS can't restyle your theme and your theme's can't restyle it, and a router written for the site root (`/play/…`) works without changes.
 * **Switch apps on and off.** Turn an app off from the app list and it disappears from every page it is embedded on — no need to edit those pages — until you turn it back on.
 * **Painless updates.** Upload a new build and every URL changes, so no browser or CDN can serve stale files. The previous build is kept, so pages cached before the update keep working.
 
 **Images and fonts just work**
 
-Your files are served from `wp-content/uploads/banzaiembed/…`, not the site root. If your build was made for the site root (Vite's default) or for another path, BanzaiEmbed points its image, font and other asset references at the new location when you upload it.
+Your files are served from `wp-content/uploads/banzaiembed/…`, not the site root. If your build was made for the site root (Vite's default) or for another path, BanzaiEmbed points its image, font and other asset references — and Vite's lazy-loaded chunks — at the new location when you upload it. Files your app asks for by a path it builds while running, like `/sounds/${name}.mp3`, are sent to the right place when they're requested.
 
-For apps with lazy-loaded chunks, build with a relative base — BanzaiEmbed will tell you if yours needs it:
+If BanzaiEmbed can't relocate an app's lazy-loaded chunks, it will tell you; build with a relative base instead:
 
 * Vite: `base: './'` in `vite.config.js`
 * Create React App: `"homepage": "."` in `package.json`
@@ -45,7 +46,8 @@ Everything above is free, with no limits on apps or pages. Pro adds what you'd o
 * **Environment variables.** Set values like API URLs per app, with separate values for staging and production. Your app reads them from `cfg.env`, so the same build runs on both.
 * **Custom CSS & JS.** Add CSS that loads with the app, and JavaScript that runs before it starts or once it has rendered — for sizing, configuration, event listeners or analytics — without rebuilding it.
 * **Site-wide placement.** Show an app on every page with no shortcode — chat widgets, feedback buttons, announcement bars — limited to the post types, pages and visitors you choose.
-* **Client-side routing.** Using React Router or Vue Router? Put your app on a page such as `/portal/`, and links, bookmarks and refreshes on `/portal/settings` or `/portal/orders/42` load your app instead of a "not found" page. Your router gets the base path from `cfg.basePath`. Real child pages of `/portal/` keep working.
+* **API proxy.** Built for Netlify or Vercel, your app calls its backend as `fetch('/api/…')`. Forward those paths to wherever the backend runs — a serverless function or your own API — and the app works on WordPress unchanged, with no CORS to set up. Visitors' cookies and WordPress logins are never passed on.
+* **Client-side routing.** Using React Router or Vue Router? Put your app on a page such as `/portal/`, and links, bookmarks and refreshes on `/portal/settings` or `/portal/orders/42` load your app instead of a "not found" page. Your router gets the base path from `cfg.basePath` — or, for an Isolated app, nothing changes at all and the page's address follows the app's router. Real child pages of `/portal/` keep working.
 
 Upgrade from **BanzaiEmbed → Upgrade** in your dashboard.
 
@@ -75,19 +77,46 @@ Not in this version — the editor shows a placeholder, and the app runs on the 
 
 = What does Pro add? =
 
-The Data Bridge (WordPress and logged-in user data for your app), environment variables, per-app custom CSS and JavaScript, site-wide placement, and client-side routing for apps using React Router or Vue Router. See **BanzaiEmbed Pro** above. Embedding, uploading and updating apps is free and stays free.
+The Data Bridge (WordPress and logged-in user data for your app), environment variables, per-app custom CSS and JavaScript, site-wide placement, an API proxy for apps that call their own backend, and client-side routing for apps using React Router or Vue Router. See **BanzaiEmbed Pro** above. Embedding, uploading and updating apps is free and stays free.
 
 = What happens if my Pro licence expires? =
 
-Nothing breaks. Apps keep receiving their Data Bridge data and environment variables, custom CSS and JavaScript keep loading, site-wide apps keep showing, and routed apps keep their routes. Changing those settings needs an active licence again.
+Nothing breaks. Apps keep receiving their Data Bridge data and environment variables, custom CSS and JavaScript keep loading, site-wide apps keep showing, API proxy rules keep forwarding, and routed apps keep their routes. Changing those settings needs an active licence again.
 
 = My app uses React Router or Vue Router. Why do refreshes show "Page not found"? =
 
 WordPress doesn't know about your app's routes, so `/portal/settings` looks like a page that doesn't exist. With Pro, turn on **Routing** for the app and choose the page it's on; every path below that page then loads your app. Pass `cfg.basePath` to your router (`basename` in React Router, `createWebHistory()` in Vue Router), and give it a catch-all "not found" route of its own. Routing needs pretty permalinks.
 
+= My app's styles change my whole site, or my theme breaks my app. =
+
+Set the app's **Display** to **Isolated**. The app then gets its own page inside a frame, so styles on `body`, `h1` or `p` stay inside it, and your theme's styles stay out. The frame grows and shrinks with the app's content, or you can make it fill the window or give it a fixed height.
+
+= My app uses a router built for the site root. Do I need to change it? =
+
+Not when the app is Isolated: inside its frame, the app's address starts at the site root, as it would on its own host. With Pro's **Routing** turned on as well, the page's address follows the app — `/play/x` in the app is `/games/play/x` on the page — so links, bookmarks, refreshes and the back button all work.
+
+= My app calls /api/… and gets a 404 on WordPress. =
+
+That path was answered by your old host — a Netlify or Vercel function, or a dev-server proxy. With Pro, add an **API proxy** rule to the app: `/api` → `https://your-site.netlify.app/api`. Requests to `/api/…` on your WordPress site are then forwarded there, and the answers passed back. A Netlify `_redirects` line like `/api/judge /.netlify/functions/judge 200` becomes the rule `/api/judge` → `https://your-site.netlify.app/.netlify/functions/judge`.
+
 = Can my app read data about the logged-in user? =
 
 With Pro, yes — and only the fields you switch on for that app. Each visitor only ever receives their own details, fetched when your app asks for them, so they never end up in a cached page.
+
+== External services ==
+
+BanzaiEmbed itself loads nothing from other sites: your app's files are served from your own `wp-content/uploads` folder. Any services your own app calls are up to your app.
+
+With Pro's **API proxy**, your site forwards the requests your app makes to the paths you choose on to the URLs you enter, with the request's body, content type, Accept and Authorization headers, your app's own `X-` headers, and the visitor's IP address (as `X-Forwarded-For`). Nothing is forwarded until you add a rule, and cookies and WordPress logins never are.
+
+The plugin uses **Freemius** (freemius.com) for licensing, updates and optional usage data. It contacts Freemius only in these cases:
+
+* **If you opt in** when you first activate the plugin. It sends your name and email address, your site's URL, WordPress, PHP and plugin versions, and language, and keeps them in sync over time. Skip the opt-in and none of this is sent.
+* **When you activate a Pro licence.** It sends the licence key and the same site details, so Freemius can check the licence and deliver Pro updates, and it re-checks the licence periodically.
+* **When you open BanzaiEmbed → Upgrade,** the pricing and checkout pages load from Freemius.
+* **If you send the optional feedback form** shown when deactivating the plugin, your answer is sent.
+
+Freemius [terms of service](https://freemius.com/terms/) and [privacy policy](https://freemius.com/privacy/).
 
 == Changelog ==
 

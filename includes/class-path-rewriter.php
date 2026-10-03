@@ -28,9 +28,14 @@ defined( 'ABSPATH' ) || exit;
  * `/assets/data` an API route on the site, and rewriting those would break
  * the app in ways much harder to diagnose than a missing image.
  *
- * What that leaves unfixed is URLs assembled at runtime from the bare base
- * string — Vite's preload helper for lazy chunks, `import.meta.env.BASE_URL`.
- * needs_rebuild() says when a build has lazy chunks that could hit that.
+ * One runtime use of the bare base is recognisable, and the one that matters
+ * most: Vite's preload helper, which every lazy chunk goes through —
+ *
+ *     il=`modulepreload`,al=function(e){return`/`+e}
+ *
+ * relocate_preload() points that at the build too. What is left — other
+ * URLs assembled at runtime from the base, such as `import.meta.env.BASE_URL`
+ * — Asset_Redirect catches when the browser requests them.
  */
 final class Path_Rewriter {
 
@@ -40,18 +45,20 @@ final class Path_Rewriter {
 	const TEXT_FILES = '/\.(m?js|cjs|css)$/i';
 
 	/**
-	 * Rewrite every reference to `{base}{file}` in the build's JS and CSS.
+	 * Rewrite every reference to `{base}{file}` in the build's JS and CSS,
+	 * and the base in Vite's preload helper.
 	 *
 	 * @param string $dir    Build directory.
 	 * @param string $base   Base the build was compiled for: '/' or '/x/y/'.
 	 * @param string $target Base the files now live at, with trailing slash.
-	 * @return array{references: int, files: int}
+	 * @return array{references: int, files: int, preload: bool}
 	 */
 	public function rewrite( $dir, $base, $target ) {
 		$files      = Filesystem::list_files( $dir );
 		$known      = array_flip( $files );
 		$references = 0;
 		$changed    = 0;
+		$preload    = false;
 
 		// Opened by a quote, backtick or `url(`; the path runs to the next
 		// character that cannot be part of one (a quote, paren, ?, # or space).
@@ -78,8 +85,15 @@ final class Path_Rewriter {
 				$source
 			);
 
-			if ( $count && null !== $result && Filesystem::write( $dir . '/' . $file, $result ) ) {
+			$helpers = 0;
+
+			if ( null !== $result && preg_match( '/\.m?js$/i', $file ) ) {
+				$result = $this->relocate_preload( $result, $base, $target, $helpers );
+			}
+
+			if ( ( $count || $helpers ) && null !== $result && Filesystem::write( $dir . '/' . $file, $result ) ) {
 				$references += $count;
+				$preload     = $preload || $helpers > 0;
 				++$changed;
 			}
 		}
@@ -87,19 +101,54 @@ final class Path_Rewriter {
 		return array(
 			'references' => $references,
 			'files'      => $changed,
+			'preload'    => $preload,
+		);
+	}
+
+	/**
+	 * Point Vite's preload helper at the build. Vite (Rollup or Rolldown,
+	 * minified or not) emits it right after the "modulepreload" string:
+	 *
+	 *     const scriptRel = 'modulepreload';const assetsURL = function(dep) { return "/"+dep };
+	 *     il=`modulepreload`,al=function(e){return`/`+e}
+	 *
+	 * Anchoring on that keeps every other `"/"+x` in the bundle — a router
+	 * joining paths, say — untouched.
+	 *
+	 * @param string $source JS.
+	 * @param string $base   Base the build was compiled for.
+	 * @param string $target Base the files now live at.
+	 * @param int    $count  Set to the number of helpers rewritten.
+	 * @return string|null
+	 */
+	private function relocate_preload( $source, $base, $target, &$count ) {
+		$q       = '["\'`]';
+		$pattern = '#(' . $q . 'modulepreload' . $q . '\s*[,;]\s*(?:(?:const|let|var)\s+)?[\w$]+\s*=\s*'
+			. '(?|function\s*\(\s*([\w$]+)\s*\)\s*\{\s*return\s*|\(?\s*([\w$]+)\s*\)?\s*=>\s*))'
+			. '(' . $q . ')' . preg_quote( $base, '#' ) . '\3(\s*\+\s*\2(?![\w$]))#';
+
+		return preg_replace_callback(
+			$pattern,
+			static function ( $m ) use ( $target ) {
+				return $m[1] . $m[3] . $target . $m[3] . $m[4];
+			},
+			$source,
+			-1,
+			$count
 		);
 	}
 
 	/**
 	 * Whether a relocated build may still have broken lazy loading: it was
-	 * compiled for a root-absolute base and has JS beyond its entry files.
+	 * compiled for a root-absolute base, has JS beyond its entry files, and
+	 * its preload helper could not be relocated.
 	 *
 	 * @param array $app    Record.
 	 * @param array $assets App_Manager::build_assets() for it.
 	 * @return bool
 	 */
 	public static function needs_rebuild( array $app, array $assets ) {
-		return '' !== $app['base'] && (bool) array_diff( $assets['scripts'], $app['scripts'] );
+		return '' !== $app['base'] && ! $app['preload_relocated'] && (bool) array_diff( $assets['scripts'], $app['scripts'] );
 	}
 
 	/**

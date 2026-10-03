@@ -1445,9 +1445,24 @@
 }
 
 .bzem-bridge-table input[type="text"],
+.bzem-bridge-table input[type="url"],
 .bzem-bridge-table select {
 	width: 100%;
 	max-width: none;
+}
+
+/* Display: the frame's options sit below the two tiles. */
+.bzem-frame-options {
+	margin-top: 16px;
+}
+
+.bzem-frame-options .bzem-field {
+	margin-top: 12px;
+}
+
+/* API proxy: the target URL needs the room more than the path. */
+.bzem-proxy .bzem-bridge-table th:first-child {
+	width: 30%;
 }
 
 .bzem-bridge-table th:last-child,

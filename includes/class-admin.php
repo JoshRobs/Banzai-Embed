@@ -526,6 +526,17 @@ final class Admin {
 		$app['mount_id']  = $mount;
 		$app['active']    = ! empty( $_POST['active'] ); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- verified above.
 
+		// phpcs:disable WordPress.Security.NonceVerification.Missing -- verified above.
+		if ( isset( $_POST['display'] ) ) {
+			$display = sanitize_key( wp_unslash( $_POST['display'] ) );
+			$height  = isset( $_POST['frame_height'] ) ? sanitize_key( wp_unslash( $_POST['frame_height'] ) ) : 'auto';
+			$pixels  = isset( $_POST['frame_px'] ) ? absint( wp_unslash( $_POST['frame_px'] ) ) : 0;
+
+			$app['display']      = 'frame' === $display ? 'frame' : 'inline';
+			$app['frame_height'] = 'fixed' === $height ? (string) min( 5000, max( 50, $pixels ? $pixels : 600 ) ) : ( 'viewport' === $height ? 'viewport' : 'auto' );
+		}
+		// phpcs:enable
+
 		/**
 		 * Filter an app record as the edit form saves it, after the nonce and
 		 * capability checks. Pro modules read their own fields from $_POST here.
@@ -587,21 +598,26 @@ final class Admin {
 		$app['detected_mount_id'] = $found['mount_id'];
 		$app['warnings']          = $found['warnings'];
 		$app['base']              = $found['base'];
+		$app['preload_relocated'] = false;
 
 		if ( '' !== $found['base'] ) {
-			$moved = $this->rewriter->rewrite( $result['dir'], $found['base'], $this->apps->build_ref( $app['slug'], $app['build'] ) );
+			$moved                    = $this->rewriter->rewrite( $result['dir'], $found['base'], $this->apps->build_ref( $app['slug'], $app['build'] ) );
+			$app['preload_relocated'] = $moved['preload'];
 
-			if ( $moved['references'] ) {
-				$this->notice(
-					'info',
-					sprintf(
-						/* translators: 1: base path such as "/" or "/my-app/", 2: number of references, 3: number of files. */
-						__( 'This build was compiled for the path %1$s, so %2$s references to its images, fonts and other files in %3$s JS/CSS files were pointed at their new location. Building with base: \'./\' avoids this step.', 'banzaiembed' ),
-						$found['base'],
-						number_format_i18n( $moved['references'] ),
-						number_format_i18n( $moved['files'] )
-					)
+			if ( $moved['references'] || $moved['preload'] ) {
+				$message = sprintf(
+					/* translators: 1: base path such as "/" or "/my-app/", 2: number of references, 3: number of files. */
+					__( 'This build was compiled for the path %1$s, so %2$s references to its images, fonts and other files in %3$s JS/CSS files were pointed at their new location.', 'banzaiembed' ),
+					$found['base'],
+					number_format_i18n( $moved['references'] ),
+					number_format_i18n( $moved['files'] )
 				);
+
+				if ( $moved['preload'] ) {
+					$message .= ' ' . __( 'Its lazy-loaded chunks were pointed there too.', 'banzaiembed' );
+				}
+
+				$this->notice( 'info', $message );
 			}
 		}
 

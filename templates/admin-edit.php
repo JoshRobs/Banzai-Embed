@@ -122,6 +122,59 @@ $default_mount = '' !== $record['detected_mount_id'] ? $record['detected_mount_i
 				</div>
 			</section>
 
+			<?php
+			$framed       = 'frame' === $record['display'];
+			$frame_height = App_Manager::frame_height( $record );
+			$fixed_height = ctype_digit( $frame_height );
+			?>
+			<section class="bzem-card bzem-display-card">
+				<header class="bzem-card-header">
+					<h2><span class="bzem-card-icon dashicons dashicons-desktop" aria-hidden="true"></span><?php esc_html_e( 'Display', 'banzaiembed' ); ?></h2>
+				</header>
+				<div class="bzem-card-body">
+					<fieldset>
+						<legend class="screen-reader-text"><?php esc_html_e( 'How the app is shown', 'banzaiembed' ); ?></legend>
+						<div class="bzem-choice-grid">
+							<label class="bzem-choice">
+								<input type="radio" name="display" value="inline" data-bzem-display <?php checked( ! $framed ); ?>>
+								<span class="bzem-choice-tile">
+									<span class="dashicons dashicons-align-center" aria-hidden="true"></span>
+									<span class="bzem-choice-name"><?php esc_html_e( 'In the page', 'banzaiembed' ); ?></span>
+									<span class="bzem-choice-hint"><?php esc_html_e( 'Part of the page, like any other content. For widgets that style only their own elements, and apps written for WordPress.', 'banzaiembed' ); ?></span>
+								</span>
+							</label>
+							<label class="bzem-choice">
+								<input type="radio" name="display" value="frame" data-bzem-display <?php checked( $framed ); ?>>
+								<span class="bzem-choice-tile">
+									<span class="dashicons dashicons-format-gallery" aria-hidden="true"></span>
+									<span class="bzem-choice-name"><?php esc_html_e( 'Isolated', 'banzaiembed' ); ?></span>
+									<span class="bzem-choice-hint"><?php esc_html_e( 'Its own page in a frame, as on its own host. For apps built to run on their own, such as a single-page app from Netlify or Vercel.', 'banzaiembed' ); ?></span>
+								</span>
+							</label>
+						</div>
+					</fieldset>
+
+					<div class="bzem-frame-options" data-bzem-frame-options>
+						<p class="description"><?php esc_html_e( 'Isolated, the app\'s CSS can\'t restyle your theme and your theme\'s can\'t restyle the app, and a router built for the site root (/, /play/…) works without changes. With Routing (Pro), the address bar follows the app as it moves between screens.', 'banzaiembed' ); ?></p>
+						<fieldset class="bzem-field">
+							<legend><?php esc_html_e( 'Height', 'banzaiembed' ); ?></legend>
+							<div class="bzem-radio-list">
+								<label><input type="radio" name="frame_height" value="auto" <?php checked( 'auto', $frame_height ); ?>> <?php esc_html_e( 'Fit the content', 'banzaiembed' ); ?></label>
+								<label><input type="radio" name="frame_height" value="viewport" <?php checked( 'viewport', $frame_height ); ?>> <?php esc_html_e( 'Fill the window (the app scrolls inside)', 'banzaiembed' ); ?></label>
+								<label>
+									<input type="radio" name="frame_height" value="fixed" <?php checked( $fixed_height ); ?>>
+									<?php esc_html_e( 'Fixed:', 'banzaiembed' ); ?>
+									<input type="number" name="frame_px" class="small-text" min="50" max="5000" step="10" value="<?php echo esc_attr( $fixed_height ? $frame_height : '600' ); ?>" aria-label="<?php esc_attr_e( 'Height in pixels', 'banzaiembed' ); ?>"> px
+								</label>
+							</div>
+						</fieldset>
+						<?php if ( App_Manager::is_site_wide( $record ) ) : ?>
+							<div class="notice notice-info inline"><p><?php esc_html_e( 'This app is placed site-wide, so it is always shown in the page: site-wide apps such as chat bubbles are positioned against the page itself.', 'banzaiembed' ); ?></p></div>
+						<?php endif; ?>
+					</div>
+				</div>
+			</section>
+
 			<?php if ( has_action( 'bzem/edit_placement' ) ) : ?>
 				<?php
 				/**
@@ -266,6 +319,16 @@ $default_mount = '' !== $record['detected_mount_id'] ? $record['detected_mount_i
 					</header>
 					<div class="bzem-card-body">
 						<p><?php esc_html_e( 'Give your app WordPress data — the current post, custom fields, site details, environment variables, and the logged-in user with a REST API nonce — without writing any PHP.', 'banzaiembed' ); ?></p>
+						<a class="button" href="<?php echo esc_url( bzem_fs()->get_upgrade_url() ); ?>"><?php esc_html_e( 'Upgrade to Pro', 'banzaiembed' ); ?></a>
+					</div>
+				</section>
+				<section class="bzem-card bzem-card-pro bzem-upsell">
+					<header class="bzem-card-header">
+						<h2><span class="bzem-card-icon dashicons dashicons-cloud" aria-hidden="true"></span><?php esc_html_e( 'API proxy', 'banzaiembed' ); ?></h2>
+						<span class="bzem-pro-badge"><span class="dashicons dashicons-star-filled" aria-hidden="true"></span><?php esc_html_e( 'Pro', 'banzaiembed' ); ?></span>
+					</header>
+					<div class="bzem-card-body">
+						<p><?php esc_html_e( 'Does your app call fetch(\'/api/…\') on its own backend? With BanzaiEmbed Pro, forward those paths to your Netlify or Vercel functions or your own API, with no code changes and no CORS setup.', 'banzaiembed' ); ?></p>
 						<a class="button" href="<?php echo esc_url( bzem_fs()->get_upgrade_url() ); ?>"><?php esc_html_e( 'Upgrade to Pro', 'banzaiembed' ); ?></a>
 					</div>
 				</section>

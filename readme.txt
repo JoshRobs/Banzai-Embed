@@ -36,6 +36,18 @@ For apps with lazy-loaded chunks, build with a relative base — BanzaiEmbed wil
 * Create React App: `"homepage": "."` in `package.json`
 * webpack 5: `output.publicPath: 'auto'`
 
+**BanzaiEmbed Pro**
+
+Everything above is free, with no limits on apps or pages. Pro adds what you'd otherwise write a custom plugin for:
+
+* **Data Bridge.** Give your app WordPress data with no PHP. Choose values in the app's settings — the current post's ID, title, URL or custom fields, the site's name or REST API address, or your own text — and your app reads them from `window.banzaiEmbed['my-app'].data`. A React calculator on a property listing can start from that listing's price; one build works on every page.
+* **Logged-in user data, safe with page caching.** Your app calls `cfg.user()` to get the current visitor's ID, display name, email or roles, and a REST API nonce for making authenticated requests. It's fetched fresh for each visitor, never written into the page, so a page cache can't show one visitor's details to another.
+* **Environment variables.** Set values like API URLs per app, with separate values for staging and production. Your app reads them from `cfg.env`, so the same build runs on both.
+* **Custom CSS & JS.** Add CSS that loads with the app, and JavaScript that runs before it starts or once it has rendered — for sizing, configuration, event listeners or analytics — without rebuilding it.
+* **Site-wide placement.** Show an app on every page with no shortcode — chat widgets, feedback buttons, announcement bars — limited to the post types, pages and visitors you choose.
+
+Upgrade from **BanzaiEmbed → Upgrade** in your dashboard.
+
 == Installation ==
 
 1. Install and activate BanzaiEmbed.
@@ -59,6 +71,18 @@ Yes. The second copy gets a suffixed ID (`app-2`). Your entry script runs once, 
 = Does it render my app in the block editor? =
 
 Not in this version — the editor shows a placeholder, and the app runs on the published page.
+
+= What does Pro add? =
+
+The Data Bridge (WordPress and logged-in user data for your app), environment variables, per-app custom CSS and JavaScript, and site-wide placement. See **BanzaiEmbed Pro** above. Embedding, uploading and updating apps is free and stays free.
+
+= What happens if my Pro licence expires? =
+
+Nothing breaks. Apps keep receiving their Data Bridge data and environment variables, custom CSS and JavaScript keep loading, and site-wide apps keep showing. Changing those settings needs an active licence again.
+
+= Can my app read data about the logged-in user? =
+
+With Pro, yes — and only the fields you switch on for that app. Each visitor only ever receives their own details, fetched when your app asks for them, so they never end up in a cached page.
 
 == Changelog ==
 

@@ -115,7 +115,7 @@ The on/off switch on each row is a tiny form posting to admin-post.php (`Admin::
 
 Freemius is initialised at the top of banzaiembed.php as `bzem_fs()` (product 40624, slug `banzaiembed`), with BanzaiStyle's structure: the rest of the file sits in the `else` of `function_exists( 'bzem_fs' )`, so when the free and premium copies are both active the second one only calls `set_basename()` instead of redeclaring every function. `tools/build.ps1` builds the premium zip; Freemius generates the free one from it.
 
-`bzem_has_valid_license()` is the single gate: `License::is_valid()` asks `bzem_fs()->can_use_premium_code()` and fails closed if the SDK is missing. `BZEM_SIMULATE_PRO` in wp-config.php forces it open (`true`) or closed (`false`) for development, whatever the real licence says. `License::PRO_AVAILABLE` is still false, so the free build shows no Pro badges or upsells yet; flip it when the plan is on sale.
+`bzem_has_valid_license()` is the single gate: `License::is_valid()` asks `bzem_fs()->can_use_premium_code()` and fails closed if the SDK is missing. `BZEM_SIMULATE_PRO` in wp-config.php forces it open (`true`) or closed (`false`) for development, whatever the real licence says. `License::PRO_AVAILABLE` is true now the plan is on sale, so the free build shows upsell cards linking to the Freemius pricing page; set it back to false if the plan is ever withdrawn.
 
 ### Keeping premium code out of the free build
 

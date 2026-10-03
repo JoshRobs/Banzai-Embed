@@ -21,10 +21,11 @@ final class License {
 	/**
 	 * Whether a paid tier exists to show at all.
 	 *
-	 * False until there is a checkout to send people to — a "Pro" badge with
-	 * nowhere to buy is an advert for a dead end. It does not gate is_valid().
+	 * Only true while there is a checkout to send people to — a "Pro" badge
+	 * with nowhere to buy is an advert for a dead end. It does not gate
+	 * is_valid().
 	 */
-	const PRO_AVAILABLE = false;
+	const PRO_AVAILABLE = true;
 
 	/**
 	 * Whether the paid tier is on show.

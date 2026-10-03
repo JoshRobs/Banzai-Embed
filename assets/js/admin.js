@@ -333,6 +333,50 @@
 	}
 
 	/**
+	 * Routing (Pro): show the pages and usage only while routing is on, and
+	 * filter long page lists. Without this everything is simply visible.
+	 */
+	function initRouting() {
+		var toggle = document.querySelector("[data-bzem-routing-toggle]");
+		var details = document.querySelector("[data-bzem-routing-details]");
+
+		if (!toggle || !details) {
+			return;
+		}
+
+		function sync() {
+			details.hidden = !toggle.checked;
+		}
+
+		toggle.addEventListener("change", sync);
+		sync();
+
+		var filter = details.querySelector(".bzem-page-filter");
+		var pages = details.querySelector("[data-bzem-routing-pages]");
+
+		if (!filter || !pages) {
+			return;
+		}
+
+		filter.hidden = false;
+
+		filter.addEventListener("input", function () {
+			var query = filter.value.trim().toLowerCase();
+
+			pages.querySelectorAll("label").forEach(function (label) {
+				label.hidden = query !== "" && label.textContent.toLowerCase().indexOf(query) === -1;
+			});
+		});
+
+		// Enter in the filter would otherwise submit the whole form.
+		filter.addEventListener("keydown", function (event) {
+			if (event.key === "Enter") {
+				event.preventDefault();
+			}
+		});
+	}
+
+	/**
 	 * The list's on/off switches post the same form without leaving the
 	 * page. The switch flips straight away and flips back if saving fails.
 	 */
@@ -417,6 +461,7 @@
 		initEntryPicker();
 		initToggles();
 		initPlacement();
+		initRouting();
 		initBridge();
 	});
 })();

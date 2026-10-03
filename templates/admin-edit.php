@@ -143,6 +143,16 @@ $default_mount = '' !== $record['detected_mount_id'] ? $record['detected_mount_i
 						<a class="button" href="<?php echo esc_url( bzem_fs()->get_upgrade_url() ); ?>"><?php esc_html_e( 'Upgrade to Pro', 'banzaiembed' ); ?></a>
 					</div>
 				</section>
+				<section class="bzem-card bzem-card-pro bzem-upsell">
+					<header class="bzem-card-header">
+						<h2><span class="bzem-card-icon dashicons dashicons-randomize" aria-hidden="true"></span><?php esc_html_e( 'Routing', 'banzaiembed' ); ?></h2>
+						<span class="bzem-pro-badge"><span class="dashicons dashicons-star-filled" aria-hidden="true"></span><?php esc_html_e( 'Pro', 'banzaiembed' ); ?></span>
+					</header>
+					<div class="bzem-card-body">
+						<p><?php esc_html_e( 'Using React Router or Vue Router? With BanzaiEmbed Pro, links and refreshes on /portal/settings or /portal/orders/42 load your app\'s page instead of a "not found" page, and your router shows the right screen.', 'banzaiembed' ); ?></p>
+						<a class="button" href="<?php echo esc_url( bzem_fs()->get_upgrade_url() ); ?>"><?php esc_html_e( 'Upgrade to Pro', 'banzaiembed' ); ?></a>
+					</div>
+				</section>
 			<?php endif; ?>
 
 			<section class="bzem-card">

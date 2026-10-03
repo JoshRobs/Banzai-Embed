@@ -77,6 +77,11 @@ final class App_Manager {
 				'env'    => array(),
 				'user'   => array(),
 			),
+			// Pro (Routing): serve the paths below these pages to the app's router.
+			'routing'           => array(
+				'enabled' => false,
+				'pages'   => array(),
+			),
 			// Pro (Custom CSS & JS).
 			'custom_code'       => array(
 				'css'       => '',

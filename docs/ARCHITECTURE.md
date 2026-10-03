@@ -22,6 +22,7 @@ includes/
   class-site-wide__premium_only.php   Pro: site-wide placement and its rules (not in the free build)
   class-data-bridge__premium_only.php Pro: cfg.data, cfg.env, cfg.user() and the admin card behind them
   class-custom-code__premium_only.php Pro: per-app CSS, and JS before/after the app
+  class-routing__premium_only.php     Pro: serves paths below a page to the app's client-side router
 vendor/freemius/                Freemius SDK (tracked; ships in the zip)
 blocks/app/block.json           block metadata (editor script registered by handle — no build step)
 templates/                      admin screens
@@ -168,9 +169,20 @@ Split by whether a page cache may store the value:
 
 In the free build, when `License::PRO_AVAILABLE` is true, the edit screen shows upsell cards for Data Bridge and Custom CSS & JS in their place (as it does for Placement).
 
-### Still to build
+### Routing
 
-- **Routing** — rewrite rules need flushing on change and must not swallow real child pages; plan for it as its own piece of work.
+`Routing` — spec item 8, stored as `routing` on the record (`{ enabled, pages }`). An app with its own router (React Router, Vue Router) lives on a page such as `/portal/`; `/portal/settings` and `/portal/orders/42` must load that page, and the app's router renders the rest. The app gets `cfg.basePath` (`"/portal"`, no trailing slash — what React Router's `basename` and Vue Router's `createWebHistory()` take) and `cfg.route` (`"orders/42"`).
+
+**No rewrite rules.** The spec assumed them, but they would need flushing whenever an app or page changes, and a catch-all under `/portal/` would swallow real child pages. Instead WordPress resolves every request as usual, and only a request that would 404 is looked at:
+
+- `pre_handle_404` (which runs on *every* request, before WordPress decides) checks that nothing resolved — or that `is_404()` is already set: a path no rewrite rule matches is flagged 404 yet still runs the default query, which finds the latest posts. If the path sits under a routed page (longest prefix wins), the main query is re-run for that page. A private page the visitor can't see falls through to the normal 404.
+- The `error=404` query var is cleared. In current WordPress `send_headers()` runs *after* `handle_404()`, and that var would put the 404 status back and add no-cache headers; in older versions it ran before, so `status_header( 200 )` is set too. Claimed routes are cacheable like any page.
+- `/portal/42` is not a 404: WordPress reads the number as page 42 of the page and redirects to `/portal/`. The `request` filter turns it into a route when the page isn't actually split with `<!--nextpage-->`.
+- `redirect_canonical` is suppressed for claimed requests, so the URL stays as the visitor typed it.
+
+So a real child page (`/portal/help/`) is never claimed — it isn't a 404 — and nothing breaks when a page is renamed or moved, because prefixes come from `get_page_uri()` on each request (only requests that would 404 pay for it). Tested under `/%postname%/` and date-based structures, which reach the 404 by different rules.
+
+Rules: pages only, not the front page or posts page (routing under the site root would claim every 404 on the site); one app per page; pretty permalinks required (the card says so otherwise). Every route returns 200 with the page's own canonical URL, so the app's router must provide its own "not found" screen. `bzem/route_match` can veto or change a match. Same lapsed-licence rule as the other pro features.
 
 ## What is not built
 

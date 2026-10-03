@@ -45,6 +45,7 @@ Everything above is free, with no limits on apps or pages. Pro adds what you'd o
 * **Environment variables.** Set values like API URLs per app, with separate values for staging and production. Your app reads them from `cfg.env`, so the same build runs on both.
 * **Custom CSS & JS.** Add CSS that loads with the app, and JavaScript that runs before it starts or once it has rendered — for sizing, configuration, event listeners or analytics — without rebuilding it.
 * **Site-wide placement.** Show an app on every page with no shortcode — chat widgets, feedback buttons, announcement bars — limited to the post types, pages and visitors you choose.
+* **Client-side routing.** Using React Router or Vue Router? Put your app on a page such as `/portal/`, and links, bookmarks and refreshes on `/portal/settings` or `/portal/orders/42` load your app instead of a "not found" page. Your router gets the base path from `cfg.basePath`. Real child pages of `/portal/` keep working.
 
 Upgrade from **BanzaiEmbed → Upgrade** in your dashboard.
 
@@ -74,11 +75,15 @@ Not in this version — the editor shows a placeholder, and the app runs on the 
 
 = What does Pro add? =
 
-The Data Bridge (WordPress and logged-in user data for your app), environment variables, per-app custom CSS and JavaScript, and site-wide placement. See **BanzaiEmbed Pro** above. Embedding, uploading and updating apps is free and stays free.
+The Data Bridge (WordPress and logged-in user data for your app), environment variables, per-app custom CSS and JavaScript, site-wide placement, and client-side routing for apps using React Router or Vue Router. See **BanzaiEmbed Pro** above. Embedding, uploading and updating apps is free and stays free.
 
 = What happens if my Pro licence expires? =
 
-Nothing breaks. Apps keep receiving their Data Bridge data and environment variables, custom CSS and JavaScript keep loading, and site-wide apps keep showing. Changing those settings needs an active licence again.
+Nothing breaks. Apps keep receiving their Data Bridge data and environment variables, custom CSS and JavaScript keep loading, site-wide apps keep showing, and routed apps keep their routes. Changing those settings needs an active licence again.
+
+= My app uses React Router or Vue Router. Why do refreshes show "Page not found"? =
+
+WordPress doesn't know about your app's routes, so `/portal/settings` looks like a page that doesn't exist. With Pro, turn on **Routing** for the app and choose the page it's on; every path below that page then loads your app. Pass `cfg.basePath` to your router (`basename` in React Router, `createWebHistory()` in Vue Router), and give it a catch-all "not found" route of its own. Routing needs pretty permalinks.
 
 = Can my app read data about the logged-in user? =
 

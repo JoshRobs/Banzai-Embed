@@ -167,7 +167,7 @@ Split by whether a page cache may store the value:
 - `</script` and `</style` are rewritten to `<\/script` / `<\/style`. That means the same inside a JS string, regex or comment and a CSS string; anywhere else the code was already broken. Nothing else is filtered: only users with `unfiltered_html` can save it.
 - 50 KB per field (it is in an autoloaded option); an oversized field keeps its previous value and the admin is told.
 
-In the free build, when `License::PRO_AVAILABLE` is true, the edit screen shows upsell cards for Data Bridge and Custom CSS & JS in their place (as it does for Placement).
+In the free build, when `License::PRO_AVAILABLE` is true, the edit screen shows upsell cards for Data Bridge and Custom CSS & JS in their place (as it does for Placement and Routing).
 
 ### Routing
 

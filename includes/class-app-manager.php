@@ -71,6 +71,18 @@ final class App_Manager {
 			'rules'             => self::default_rules(),
 			'created'           => 0,
 			'modified'          => 0,
+			// Pro (Data Bridge): page values, env vars, user fields.
+			'bridge'            => array(
+				'values' => array(),
+				'env'    => array(),
+				'user'   => array(),
+			),
+			// Pro (Custom CSS & JS).
+			'custom_code'       => array(
+				'css'       => '',
+				'js_before' => '',
+				'js_after'  => '',
+			),
 		);
 	}
 

@@ -822,13 +822,14 @@ final class Admin {
 	}
 
 	/**
-	 * Queue a notice for the next screen this user sees.
+	 * Queue a notice for the next screen this user sees. Public for pro
+	 * modules saving through handle_save().
 	 *
 	 * @param string   $type    success | error | warning | info.
 	 * @param string   $message Plain text.
 	 * @param string[] $items   Optional list shown under it.
 	 */
-	private function notice( $type, $message, array $items = array() ) {
+	public static function notice( $type, $message, array $items = array() ) {
 		$key       = 'bzem_notices_' . get_current_user_id();
 		$notices   = get_transient( $key );
 		$notices   = is_array( $notices ) ? $notices : array();

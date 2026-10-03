@@ -63,7 +63,10 @@ final class App_Manager {
 			// Root-absolute base the build was compiled for ('/' or '/x/y/'),
 			// whose references Path_Rewriter relocated; '' if relative.
 			'base'              => '',
+			// Inactive apps render nothing on the front end.
+			'active'            => true,
 			'created'           => 0,
+			'modified'          => 0,
 		);
 	}
 
@@ -121,6 +124,7 @@ final class App_Manager {
 			$app['created'] = time();
 		}
 
+		$app['modified']      = time();
 		$apps[ $app['slug'] ] = $app;
 		$this->write( $apps );
 	}
@@ -211,6 +215,28 @@ final class App_Manager {
 		}
 
 		return empty( $app['scripts'] ) ? 'needs-entry' : 'ready';
+	}
+
+	/**
+	 * Whether the app is switched on. Separate from status(), which is about
+	 * whether the build can be embedded at all.
+	 *
+	 * @param array $app Record.
+	 * @return bool
+	 */
+	public static function is_active( array $app ) {
+		return ! empty( $app['active'] );
+	}
+
+	/**
+	 * When the record last changed, for records saved before `modified`
+	 * existed too.
+	 *
+	 * @param array $app Record.
+	 * @return int Timestamp, or 0.
+	 */
+	public static function modified( array $app ) {
+		return (int) max( $app['modified'], $app['uploaded'], $app['created'] );
 	}
 
 	/**

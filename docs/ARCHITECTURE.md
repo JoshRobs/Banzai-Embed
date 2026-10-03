@@ -31,7 +31,9 @@ Naming follows BanzaiStyle's actual convention (not the spec's `banzaiembed_` ev
 
 ## Data
 
-One autoloaded option, `banzaiembed_apps`, keyed by slug. The record shape is `App_Manager::defaults()`; anything missing from a stored record is filled from it, so adding a field needs no migration.
+One autoloaded option, `banzaiembed_apps`, keyed by slug. The record shape is `App_Manager::defaults()`; anything missing from a stored record is filled from it, so adding a field needs no migration. Records saved before `active` and `modified` existed come back active, with `App_Manager::modified()` falling back to the upload or creation time.
+
+`active` is deliberately separate from `App_Manager::status()`: status says whether a build *can* be embedded (`ready`, `needs-entry`, `no-build`), active says whether the site owner *wants* it embedded right now.
 
 The slug cannot change after creation: shortcodes, blocks, the uploads path and `window.banzaiEmbed` keys all use it.
 
@@ -98,7 +100,13 @@ window.banzaiEmbed["my-app"] = { slug, baseUrl, mountId, mounts: ["app", "app-2"
 - Keyed by slug verbatim, not camel-cased as the spec sketched: `my-app` and `my_app` would collide as `myApp`.
 - `bzem/app_data` filters the object — the seam for the pro Data Bridge and environment variables.
 
-`id`, `class` and `style` attributes are sanitised (`[A-Za-z0-9_-]`, `sanitize_html_class`, `safecss_filter_attr`) because shortcodes can be written by Contributors. Problems (unknown slug, no build) are shown to users who can edit posts and render nothing for visitors.
+`id`, `class` and `style` attributes are sanitised (`[A-Za-z0-9_-]`, `sanitize_html_class`, `safecss_filter_attr`) because shortcodes can be written by Contributors. Problems (unknown slug, no build, app switched off) are shown to users who can edit posts and render nothing for visitors. An inactive app is also skipped by `prescan()`, so none of its assets load.
+
+## Admin screens
+
+Both screens share a brand bar and framework tabs (`templates/admin-header.php`), printed above `.wrap`; the `bzem-admin-page` body class, added only on our two screens (not Freemius' pages in the same menu), removes the content gutter so the bar runs edge to edge. The list is filtered, searched and sorted server-side from query arguments (`framework`, `status`, `s`, `orderby`, `order`) — there are few enough apps that `WP_List_Table`'s pagination machinery would be dead weight, but the markup keeps its classes so the core mobile layout applies.
+
+The on/off switch on each row is a tiny form posting to admin-post.php (`Admin::handle_toggle()`), so it works without JavaScript; admin.js submits the same form with `ajax=1` and gets JSON instead of a redirect. Read the form's URL with `getAttribute('action')`: its `<input name="action">` shadows `form.action`.
 
 ## Pro
 

@@ -23,6 +23,7 @@ BanzaiEmbed takes the build you already have — the contents of `dist/` or `bui
 * **Your app mounts unmodified.** The mount element gets the same ID your `index.html` used — `#app` for Vite + Vue, `#root` for Vite + React — so the code you already have finds it.
 * **Loads only where it's used.** Scripts and styles are enqueued only on pages that embed the app, as ES modules for Vite builds and deferred scripts for webpack builds.
 * **Several apps per page.** Each gets its own mount point, and repeated instances get unique IDs.
+* **Switch apps on and off.** Turn an app off from the app list and it disappears from every page it is embedded on — no need to edit those pages — until you turn it back on.
 * **Painless updates.** Upload a new build and every URL changes, so no browser or CDN can serve stale files. The previous build is kept, so pages cached before the update keep working.
 
 **Images and fonts just work**

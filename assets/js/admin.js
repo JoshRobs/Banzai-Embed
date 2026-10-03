@@ -1,6 +1,7 @@
 /**
  * BanzaiEmbed admin screens: slug generation, copy buttons, delete
- * confirmation, the upload drop zone and the entry-file picker.
+ * confirmation, the upload drop zone, the entry-file picker and the
+ * active/inactive switches.
  *
  * Every form works without this file; it only makes them nicer.
  */
@@ -24,6 +25,7 @@
 	function initSlug() {
 		var name = document.getElementById("bzem-name");
 		var slug = document.getElementById("bzem-slug");
+		var preview = document.getElementById("bzem-slug-preview");
 
 		if (!name || !slug) {
 			return;
@@ -32,13 +34,21 @@
 		// Follow the name until the user types a slug of their own.
 		var touched = slug.value !== "";
 
+		function showPreview() {
+			if (preview) {
+				preview.textContent = '[banzai-embed app="' + (slugify(slug.value) || "my-app") + '"]';
+			}
+		}
+
 		slug.addEventListener("input", function () {
 			touched = slug.value !== "";
+			showPreview();
 		});
 
 		name.addEventListener("input", function () {
 			if (!touched) {
 				slug.value = slugify(name.value);
+				showPreview();
 			}
 		});
 	}
@@ -74,12 +84,28 @@
 				return;
 			}
 
-			var label = button.textContent;
-
 			copy(button.getAttribute("data-copy")).then(function () {
-				button.textContent = __("Copied!", "banzaiembed");
+				// Icon buttons swap their icon for a tick; text buttons their text.
+				var icon = button.querySelector(".dashicons");
+				var label = icon ? button.getAttribute("aria-label") : button.textContent;
+				var done = __("Copied!", "banzaiembed");
+
+				if (icon) {
+					icon.classList.replace("dashicons-admin-page", "dashicons-yes");
+					button.classList.add("is-copied");
+					button.setAttribute("aria-label", done);
+				} else {
+					button.textContent = done;
+				}
+
 				setTimeout(function () {
-					button.textContent = label;
+					if (icon) {
+						icon.classList.replace("dashicons-yes", "dashicons-admin-page");
+						button.classList.remove("is-copied");
+						button.setAttribute("aria-label", label);
+					} else {
+						button.textContent = label;
+					}
 				}, 1500);
 			});
 		});
@@ -167,11 +193,88 @@
 		});
 	}
 
+	/**
+	 * The list's on/off switches post the same form without leaving the
+	 * page. The switch flips straight away and flips back if saving fails.
+	 */
+	function initToggles() {
+		if (!window.fetch || !window.FormData) {
+			return;
+		}
+
+		function setState(form, active) {
+			var button = form.querySelector(".bzem-switch");
+			var row = form.closest("tr");
+
+			button.setAttribute("aria-checked", active ? "true" : "false");
+			button.setAttribute("title", active ? __("Deactivate", "banzaiembed") : __("Activate", "banzaiembed"));
+			form.querySelector("input[name=active]").value = active ? "0" : "1";
+
+			if (row) {
+				row.classList.toggle("is-inactive", !active);
+			}
+
+			// Keep the Active / Inactive counts honest.
+			[["active", active ? 1 : -1], ["inactive", active ? -1 : 1]].forEach(function (pair) {
+				var count = document.querySelector('[data-bzem-count="' + pair[0] + '"]');
+
+				if (count) {
+					count.textContent = String(Math.max(0, (parseInt(count.textContent.replace(/\D/g, ""), 10) || 0) + pair[1]));
+				}
+			});
+		}
+
+		document.addEventListener("submit", function (event) {
+			var form = event.target.closest(".bzem-toggle-form");
+
+			if (!form) {
+				return;
+			}
+
+			event.preventDefault();
+
+			var button = form.querySelector(".bzem-switch");
+
+			if (button.getAttribute("aria-busy") === "true") {
+				return;
+			}
+
+			var active = form.querySelector("input[name=active]").value === "1";
+			var body = new FormData(form);
+
+			body.append("ajax", "1");
+			setState(form, active);
+			button.setAttribute("aria-busy", "true");
+
+			// getAttribute: the form's <input name="action"> shadows form.action.
+			fetch(form.getAttribute("action"), { method: "POST", body: body, credentials: "same-origin" })
+				.then(function (response) {
+					return response.json().then(function (json) {
+						if (!response.ok || !json.success) {
+							// The handler's own explanation, when it sent one.
+							throw { message: json && typeof json.data === "string" ? json.data : "" };
+						}
+					});
+				})
+				.catch(function (error) {
+					// Anything else — a network error, an HTML error page — gets the generic message.
+					var message = error instanceof Error ? "" : error.message;
+
+					setState(form, !active);
+					window.alert(message || __("The app could not be updated. Reload the page and try again.", "banzaiembed"));
+				})
+				.then(function () {
+					button.removeAttribute("aria-busy");
+				});
+		});
+	}
+
 	document.addEventListener("DOMContentLoaded", function () {
 		initSlug();
 		initCopy();
 		initDelete();
 		initDropzone();
 		initEntryPicker();
+		initToggles();
 	});
 })();

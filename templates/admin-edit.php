@@ -70,7 +70,7 @@ $default_mount = '' !== $record['detected_mount_id'] ? $record['detected_mount_i
 
 			<section class="bzem-card">
 				<header class="bzem-card-header">
-					<h2><?php esc_html_e( 'App details', 'banzaiembed' ); ?></h2>
+					<h2><span class="bzem-card-icon dashicons dashicons-info-outline" aria-hidden="true"></span><?php esc_html_e( 'App details', 'banzaiembed' ); ?></h2>
 				</header>
 				<div class="bzem-card-body">
 					<div class="bzem-field">
@@ -133,10 +133,10 @@ $default_mount = '' !== $record['detected_mount_id'] ? $record['detected_mount_i
 				do_action( 'bzem/edit_placement', $record, $is_new );
 				?>
 			<?php elseif ( License::is_pro_available() ) : ?>
-				<section class="bzem-card bzem-upsell">
+				<section class="bzem-card bzem-card-pro bzem-upsell">
 					<header class="bzem-card-header">
-						<h2><?php esc_html_e( 'Placement', 'banzaiembed' ); ?></h2>
-						<span class="bzem-pro-badge"><?php esc_html_e( 'Pro', 'banzaiembed' ); ?></span>
+						<h2><span class="bzem-card-icon dashicons dashicons-location" aria-hidden="true"></span><?php esc_html_e( 'Placement', 'banzaiembed' ); ?></h2>
+						<span class="bzem-pro-badge"><span class="dashicons dashicons-star-filled" aria-hidden="true"></span><?php esc_html_e( 'Pro', 'banzaiembed' ); ?></span>
 					</header>
 					<div class="bzem-card-body">
 						<p><?php esc_html_e( 'This app is placed with its shortcode or block. With BanzaiEmbed Pro, it can show site-wide instead — on every page, or only on the post types, pages and visitors you choose. Ideal for chat widgets, feedback buttons and announcement bars.', 'banzaiembed' ); ?></p>
@@ -147,7 +147,7 @@ $default_mount = '' !== $record['detected_mount_id'] ? $record['detected_mount_i
 
 			<section class="bzem-card">
 				<header class="bzem-card-header">
-					<h2><?php echo $has_build ? esc_html__( 'Replace build', 'banzaiembed' ) : esc_html__( 'Upload build', 'banzaiembed' ); ?></h2>
+					<h2><span class="bzem-card-icon dashicons dashicons-upload" aria-hidden="true"></span><?php echo $has_build ? esc_html__( 'Replace build', 'banzaiembed' ) : esc_html__( 'Upload build', 'banzaiembed' ); ?></h2>
 				</header>
 				<div class="bzem-card-body">
 					<label class="bzem-dropzone" for="bzem-build">
@@ -182,7 +182,7 @@ $default_mount = '' !== $record['detected_mount_id'] ? $record['detected_mount_i
 			<?php if ( $has_build ) : ?>
 				<section class="bzem-card">
 					<header class="bzem-card-header">
-						<h2><?php esc_html_e( 'Entry files', 'banzaiembed' ); ?></h2>
+						<h2><span class="bzem-card-icon dashicons dashicons-media-code" aria-hidden="true"></span><?php esc_html_e( 'Entry files', 'banzaiembed' ); ?></h2>
 						<span class="bzem-method"><?php echo esc_html( isset( $methods[ $record['detected_by'] ] ) ? $methods[ $record['detected_by'] ] : $record['detected_by'] ); ?></span>
 					</header>
 					<div class="bzem-card-body">
@@ -249,20 +249,20 @@ $default_mount = '' !== $record['detected_mount_id'] ? $record['detected_mount_i
 				do_action( 'bzem/edit_cards', $record );
 				?>
 			<?php elseif ( ! $is_new && License::is_pro_available() ) : ?>
-				<section class="bzem-card bzem-upsell">
+				<section class="bzem-card bzem-card-pro bzem-upsell">
 					<header class="bzem-card-header">
-						<h2><?php esc_html_e( 'Data Bridge', 'banzaiembed' ); ?></h2>
-						<span class="bzem-pro-badge"><?php esc_html_e( 'Pro', 'banzaiembed' ); ?></span>
+						<h2><span class="bzem-card-icon dashicons dashicons-database-export" aria-hidden="true"></span><?php esc_html_e( 'Data Bridge', 'banzaiembed' ); ?></h2>
+						<span class="bzem-pro-badge"><span class="dashicons dashicons-star-filled" aria-hidden="true"></span><?php esc_html_e( 'Pro', 'banzaiembed' ); ?></span>
 					</header>
 					<div class="bzem-card-body">
 						<p><?php esc_html_e( 'Give your app WordPress data — the current post, custom fields, site details, environment variables, and the logged-in user with a REST API nonce — without writing any PHP.', 'banzaiembed' ); ?></p>
 						<a class="button" href="<?php echo esc_url( bzem_fs()->get_upgrade_url() ); ?>"><?php esc_html_e( 'Upgrade to Pro', 'banzaiembed' ); ?></a>
 					</div>
 				</section>
-				<section class="bzem-card bzem-upsell">
+				<section class="bzem-card bzem-card-pro bzem-upsell">
 					<header class="bzem-card-header">
-						<h2><?php esc_html_e( 'Custom CSS & JS', 'banzaiembed' ); ?></h2>
-						<span class="bzem-pro-badge"><?php esc_html_e( 'Pro', 'banzaiembed' ); ?></span>
+						<h2><span class="bzem-card-icon dashicons dashicons-editor-code" aria-hidden="true"></span><?php esc_html_e( 'Custom CSS & JS', 'banzaiembed' ); ?></h2>
+						<span class="bzem-pro-badge"><span class="dashicons dashicons-star-filled" aria-hidden="true"></span><?php esc_html_e( 'Pro', 'banzaiembed' ); ?></span>
 					</header>
 					<div class="bzem-card-body">
 						<p><?php esc_html_e( 'Add CSS that loads with this app, and JavaScript that runs before it starts or once it has rendered — for sizing, configuration, event listeners and analytics.', 'banzaiembed' ); ?></p>
@@ -275,7 +275,7 @@ $default_mount = '' !== $record['detected_mount_id'] ? $record['detected_mount_i
 		<div class="bzem-side">
 			<section class="bzem-card bzem-publish">
 				<header class="bzem-card-header">
-					<h2><?php esc_html_e( 'Status', 'banzaiembed' ); ?></h2>
+					<h2><span class="bzem-card-icon dashicons dashicons-visibility" aria-hidden="true"></span><?php esc_html_e( 'Status', 'banzaiembed' ); ?></h2>
 				</header>
 				<div class="bzem-card-body">
 					<label class="bzem-switch-field">
@@ -315,7 +315,7 @@ $default_mount = '' !== $record['detected_mount_id'] ? $record['detected_mount_i
 			<?php if ( ! $is_new ) : ?>
 				<section class="bzem-card">
 					<header class="bzem-card-header">
-						<h2><?php esc_html_e( 'Embed', 'banzaiembed' ); ?></h2>
+						<h2><span class="bzem-card-icon dashicons dashicons-shortcode" aria-hidden="true"></span><?php esc_html_e( 'Embed', 'banzaiembed' ); ?></h2>
 					</header>
 					<div class="bzem-card-body">
 						<p class="bzem-label"><?php esc_html_e( 'Shortcode', 'banzaiembed' ); ?></p>

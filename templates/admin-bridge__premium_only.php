@@ -65,10 +65,10 @@ $blank_env   = array(
 	'staging' => '',
 );
 ?>
-<section class="bzem-card bzem-bridge">
+<section class="bzem-card bzem-card-pro bzem-bridge">
 	<header class="bzem-card-header">
-		<h2><?php esc_html_e( 'Data Bridge', 'banzaiembed' ); ?></h2>
-		<span class="bzem-pro-badge"><?php esc_html_e( 'Pro', 'banzaiembed' ); ?></span>
+		<h2><span class="bzem-card-icon dashicons dashicons-database-export" aria-hidden="true"></span><?php esc_html_e( 'Data Bridge', 'banzaiembed' ); ?></h2>
+		<span class="bzem-pro-badge"><span class="dashicons dashicons-star-filled" aria-hidden="true"></span><?php esc_html_e( 'Pro', 'banzaiembed' ); ?></span>
 	</header>
 	<div class="bzem-card-body">
 	<?php if ( ! $licensed ) : ?>

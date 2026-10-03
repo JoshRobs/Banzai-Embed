@@ -13,6 +13,7 @@
 	--bzem-radius: 8px;
 	--bzem-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 	--bzem-brand: linear-gradient(180deg, #14d4f8, #1af0a4);
+	--bzem-brand-h: linear-gradient(90deg, #14d4f8, #1af0a4);
 }
 
 /* The brand bar runs edge to edge, so the content area loses its gutter
@@ -817,9 +818,62 @@
 }
 
 .bzem-card-header h2 {
+	display: flex;
+	align-items: center;
+	gap: 10px;
 	margin: 0;
-	font-size: 14px;
+	color: var(--bzem-ink);
+	font-size: 15px;
 	font-weight: 600;
+	letter-spacing: -0.005em;
+}
+
+/* Icon tile at the start of each card title. */
+.bzem-card-header .bzem-card-icon {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	width: 30px;
+	height: 30px;
+	border-radius: 8px;
+	background: var(--bzem-accent-soft);
+	color: var(--bzem-accent);
+	font-size: 17px;
+	line-height: 1;
+}
+
+/* ---------- Pro cards ---------- */
+
+/* A brand strip along the top, a tinted header and a gradient icon set
+   pro features apart from the free cards around them. */
+.bzem-card-pro {
+	position: relative;
+	border-color: #bfe9e3;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 14px -6px rgba(20, 180, 170, 0.25);
+}
+
+.bzem-card-pro::before {
+	content: "";
+	position: absolute;
+	top: -1px;
+	right: -1px;
+	left: -1px;
+	height: 3px;
+	border-radius: var(--bzem-radius) var(--bzem-radius) 0 0;
+	background: var(--bzem-brand-h);
+}
+
+.bzem-card-pro .bzem-card-header {
+	border-bottom-color: #dcf3ee;
+	border-radius: var(--bzem-radius) var(--bzem-radius) 0 0;
+	background: linear-gradient(90deg, rgba(20, 212, 248, 0.07), rgba(26, 240, 164, 0.07));
+}
+
+.bzem-card-pro .bzem-card-header .bzem-card-icon {
+	background: var(--bzem-brand);
+	color: #062b2b;
+	box-shadow: 0 1px 3px rgba(6, 43, 43, 0.15);
 }
 
 .bzem-card-body {
@@ -989,14 +1043,25 @@
 
 /* Placement (Pro). */
 .bzem-pro-badge {
-	padding: 1px 8px;
+	display: inline-flex;
+	align-items: center;
+	gap: 3px;
+	padding: 3px 10px 3px 7px;
 	border-radius: 999px;
-	background: var(--bzem-brand);
+	background: var(--bzem-brand-h);
+	box-shadow: 0 1px 3px rgba(6, 43, 43, 0.18);
 	color: #062b2b;
 	font-size: 11px;
 	font-weight: 700;
-	letter-spacing: 0.02em;
+	line-height: 1.3;
+	letter-spacing: 0.04em;
 	text-transform: uppercase;
+}
+
+.bzem-pro-badge .dashicons {
+	width: 12px;
+	height: 12px;
+	font-size: 12px;
 }
 
 .bzem-placement-card .notice.inline {
@@ -1314,18 +1379,60 @@
 
 /* ---------- Data Bridge (Pro) ---------- */
 
+/* A titled section inside a card: a rule above, an accent bar before. */
 .bzem-section-title {
-	margin: 24px 0 4px;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	margin: 28px 0 6px;
+	padding-top: 22px;
+	border-top: 1px solid var(--bzem-rule);
 	color: var(--bzem-ink);
-	font-size: 13px;
+	font-size: 14px;
 	font-weight: 600;
 }
 
-.bzem-card-body > .bzem-section-title:first-child {
+.bzem-section-title::before {
+	content: "";
+	flex: none;
+	width: 4px;
+	height: 16px;
+	border-radius: 2px;
+	background: var(--bzem-accent);
+}
+
+.bzem-card-pro .bzem-section-title::before {
+	background: var(--bzem-brand);
+}
+
+/* The first section of a card needs no rule — the header already has one.
+   (A pro card's fieldset starts with its hidden marker input.) */
+.bzem-card-body > .bzem-section-title:first-child,
+.bzem-fieldset > input[type="hidden"]:first-child + .bzem-section-title {
 	margin-top: 0;
+	padding-top: 0;
+	border-top: 0;
+}
+
+/* …nor does one straight after the card's intro sentence. */
+.bzem-fieldset > input[type="hidden"]:first-child + .description + .bzem-section-title {
+	margin-top: 20px;
+	padding-top: 0;
+	border-top: 0;
+}
+
+.bzem-section-title label {
+	color: inherit;
+	font: inherit;
 }
 
 .bzem-section-title code {
+	padding: 1px 6px;
+	border-radius: 4px;
+	background: var(--bzem-surface);
+	color: var(--bzem-muted);
+	font-size: 12px;
 	font-weight: 400;
 }
 

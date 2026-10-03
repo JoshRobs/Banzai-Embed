@@ -1,4 +1,4 @@
-=== BanzaiEmbed — Vue & React Apps ===
+=== BanzaiEmbed — Vue & React App Embedder ===
 Contributors: joshuaroberts
 Tags: vue, react, shortcode, block, javascript
 Requires at least: 6.0

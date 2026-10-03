@@ -1,4 +1,4 @@
-# BanzaiEmbed — Vue & React Apps
+# BanzaiEmbed — Vue & React App Embedder
 
 A WordPress plugin for embedding pre-built Vue, React or vanilla JS apps. Upload the build output as a zip; embed it with `[banzai-embed app="my-app"]` or the **BanzaiEmbed App** block. Nothing is compiled on the server.
 

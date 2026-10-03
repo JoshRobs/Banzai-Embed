@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: BanzaiEmbed — Vue & React Apps
+ * Plugin Name: BanzaiEmbed — Vue & React App Embedder
  * Description: Embed pre-built Vue, React or vanilla JavaScript apps in any page or post. Upload your build as a zip, then drop it in with a shortcode or block — no Node.js on the server.
  * Version:     0.1.0
  * Author:      BanzaiEmbed

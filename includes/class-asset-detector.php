@@ -33,7 +33,10 @@ final class Asset_Detector {
 	 *
 	 * @param string $dir Absolute path of the build directory.
 	 * @return array { scripts: string[], styles: string[], script_type: string,
-	 *                 detected_by: string, mount_id: string, warnings: string[] }
+	 *                 detected_by: string, mount_id: string, warnings: string[],
+	 *                 base: string } `base` is the root-absolute path the build
+	 *                 was compiled for ('/' or '/some/path/'), or '' when its
+	 *                 references are relative or unknown.
 	 */
 	public function detect( $dir ) {
 		$html   = $this->read_index_html( $dir );
@@ -66,6 +69,7 @@ final class Asset_Detector {
 		}
 
 		$result['mount_id'] = '' !== $html ? $this->mount_id( $html ) : '';
+		$result            += array( 'base' => '' );
 
 		return $result;
 	}
@@ -101,7 +105,7 @@ final class Asset_Detector {
 		$modules  = 0;
 		$classics = 0;
 		$warnings = array();
-		$rooted   = false;
+		$base     = '';
 		$missing  = array();
 
 		// Comments can hold commented-out tags.
@@ -128,7 +132,7 @@ final class Asset_Detector {
 				continue;
 			}
 
-			$path = $this->resolve( $dir, $attrs['src'], $rooted );
+			$path = $this->resolve( $dir, $attrs['src'], $base );
 
 			if ( null === $path ) {
 				$missing[] = $attrs['src'];
@@ -154,7 +158,7 @@ final class Asset_Detector {
 				continue;
 			}
 
-			$path = $this->resolve( $dir, $attrs['href'], $rooted );
+			$path = $this->resolve( $dir, $attrs['href'], $base );
 
 			if ( null === $path ) {
 				$missing[] = $attrs['href'];
@@ -177,16 +181,13 @@ final class Asset_Detector {
 			$warnings[] = sprintf( __( 'index.html references %s, which is not in the zip.', 'banzaiembed' ), $ref );
 		}
 
-		if ( $rooted ) {
-			$warnings[] = self::rooted_warning();
-		}
-
 		return array(
 			'scripts'     => array_values( array_unique( $scripts ) ),
 			'styles'      => array_values( array_unique( $styles ) ),
 			'script_type' => $modules ? 'module' : 'classic',
 			'detected_by' => 'index-html',
 			'warnings'    => array_values( array_unique( $warnings ) ),
+			'base'        => $base,
 		);
 	}
 
@@ -458,16 +459,18 @@ final class Asset_Detector {
 	 * relative to the build directory, or an absolute URL for external files.
 	 *
 	 * Root-absolute references (`/assets/x.js` — Vite's default `base: '/'`,
-	 * CRA without `homepage`) are resolved by finding the file in the build,
-	 * and $rooted is set so the caller can warn: the entry will load, but
-	 * anything the entry itself fetches from the root will not.
+	 * CRA without `homepage`, or a base like `/old/site/path/`) are resolved
+	 * by finding the file in the build, and $base is set to the prefix that
+	 * was in front of it: the base the build was compiled for. Path_Rewriter
+	 * uses it to fix the references inside the build's own JS and CSS.
 	 *
-	 * @param string $dir    Build directory.
-	 * @param string $ref    src/href value.
-	 * @param bool   $rooted Set true when the reference was root-absolute.
+	 * @param string $dir  Build directory.
+	 * @param string $ref  src/href value.
+	 * @param string $base Set to the build's base path when the reference
+	 *                     was root-absolute, e.g. '/' or '/my-app/'.
 	 * @return string|null Null when it cannot be found in the build.
 	 */
-	private function resolve( $dir, $ref, &$rooted ) {
+	private function resolve( $dir, $ref, &$base ) {
 		$ref = trim( $ref );
 
 		if ( preg_match( '#^(https?:)?//#i', $ref ) ) {
@@ -484,17 +487,18 @@ final class Asset_Detector {
 			// Try the full path, then with each leading segment dropped, which
 			// also covers a non-root base such as `/my-app/`.
 			$segments = array_values( array_filter( explode( '/', $ref ), 'strlen' ) );
+			$dropped  = array();
 
 			while ( $segments ) {
 				$candidate = $this->normalise( implode( '/', $segments ) );
 
 				if ( null !== $candidate && is_file( $dir . '/' . $candidate ) ) {
-					$rooted = true;
+					$base = $dropped ? '/' . implode( '/', $dropped ) . '/' : '/';
 
 					return $candidate;
 				}
 
-				array_shift( $segments );
+				$dropped[] = array_shift( $segments );
 			}
 
 			return null;
@@ -542,14 +546,5 @@ final class Asset_Detector {
 	 */
 	public function is_relative_file( $path ) {
 		return is_string( $path ) && '' !== $path && null !== $this->normalise( $path ) && false === strpos( $path, '..' ) && ! preg_match( '#^([a-z]+:|/)#i', $path );
-	}
-
-	/**
-	 * Explanation shown when a build references its files from the site root.
-	 *
-	 * @return string
-	 */
-	public static function rooted_warning() {
-		return __( 'This build loads its files from the site root (Vite\'s default base: \'/\', or Create React App without "homepage"). The entry files were found, but lazy-loaded chunks, and images or fonts referenced from your JS and CSS, will 404. Rebuild with base: \'./\' in vite.config, or "homepage": "." in package.json.', 'banzaiembed' );
 	}
 }

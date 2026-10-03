@@ -229,7 +229,8 @@ The plugin is built. Where it departs from the spec above, it does so deliberate
 - **Default mount ID** is the one in the build's index.html (`app` / `root`), not `bzem-{slug}` — that is what unmodified app code targets.
 - **Cache-busting** is a new directory per upload (previous build kept for cached pages), not a `?ver=` query — a query string makes ES modules load twice.
 - **Scripts** are printed as `type="module"` (Vite) or `defer` (classic), detected per build.
+- **Builds compiled for another base** (`/` or an old path) have exact references to their own files rewritten at upload (`Path_Rewriter`) so images and fonts load. Bare base strings are never rewritten (router bases, API paths); builds with lazy chunks get a "rebuild with base './'" warning.
 - **Managing apps** needs `manage_options` + `unfiltered_html`. Only allowlisted static file types are ever written from a zip.
 - **Forms** post to admin-post.php, not AJAX.
-- **Not built:** the "use WP's bundled React" option (a build-time decision the plugin can't make). Pro features: only the license seam exists; Freemius is not initialised (no product ID yet).
+- **Not built:** the "use WP's bundled React" option (a build-time decision the plugin can't make). Freemius is initialised as `bzem_fs()`; the license seam is `bzem_has_valid_license()`. Pro features live in `*__premium_only.php` files loaded from one `is__premium_only()` block in `Plugin::run()`, so Freemius strips them from the free build — never reference them from free code. Built so far: **site-wide placement** (`Site_Wide`), which keeps rendering if a licence lapses; only changing placement/rules needs a licence. Uninstall cleanup runs on Freemius' `after_uninstall`, not an uninstall.php (which would stop Freemius seeing uninstalls).
 - **Pro cautions:** inlining current-user data leaks it through page caches — use a REST endpoint; the "custom PHP snippets" feature is eval() and should be dropped.

@@ -58,7 +58,7 @@ final class Plugin {
 	public function __construct() {
 		$this->apps  = new App_Manager();
 		$this->embed = new Embed( $this->apps );
-		$this->admin = new Admin( $this->apps, new Uploader( $this->apps ), new Asset_Detector() );
+		$this->admin = new Admin( $this->apps, new Uploader( $this->apps ), new Asset_Detector(), new Path_Rewriter() );
 	}
 
 	/**
@@ -73,6 +73,12 @@ final class Plugin {
 
 		if ( is_admin() ) {
 			$this->admin->register();
+		}
+
+		// Stripped from the free build by Freemius, file and all.
+		if ( bzem_fs()->is__premium_only() ) {
+			require_once BZEM_PLUGIN_PATH . 'includes/class-site-wide__premium_only.php';
+			( new Site_Wide( $this->apps, $this->embed ) )->register();
 		}
 
 		/**

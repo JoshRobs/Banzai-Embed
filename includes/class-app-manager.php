@@ -60,8 +60,95 @@ final class App_Manager {
 			// index-html, vite-manifest, asset-manifest, pattern, manual or ''.
 			'detected_by'       => '',
 			'warnings'          => array(),
+			// Root-absolute base the build was compiled for ('/' or '/x/y/'),
+			// whose references Path_Rewriter relocated; '' if relative.
+			'base'              => '',
+			// Inactive apps render nothing on the front end.
+			'active'            => true,
+			// 'shortcode' (placed by shortcode or block) or 'site_wide'
+			// (Pro: printed on every page its rules match).
+			'placement'         => 'shortcode',
+			'rules'             => self::default_rules(),
 			'created'           => 0,
+			'modified'          => 0,
 		);
+	}
+
+	/**
+	 * Where a site-wide app shows, by default: everywhere, to everyone.
+	 *
+	 * @return array { post_types: string[] (empty = every page), exclude: int[] (post IDs), audience: string }
+	 */
+	public static function default_rules() {
+		return array(
+			'post_types' => array(),
+			'exclude'    => array(),
+			// 'everyone', 'logged_in' or 'logged_out'.
+			'audience'   => 'everyone',
+		);
+	}
+
+	/**
+	 * An app's site-wide rules, complete and well-typed whatever was stored.
+	 *
+	 * @param array $app Record.
+	 * @return array See default_rules().
+	 */
+	public static function rules( array $app ) {
+		$rules = array_merge( self::default_rules(), is_array( $app['rules'] ) ? $app['rules'] : array() );
+
+		return array(
+			'post_types' => array_values( array_filter( array_map( 'sanitize_key', (array) $rules['post_types'] ) ) ),
+			'exclude'    => array_values( array_filter( array_map( 'absint', (array) $rules['exclude'] ) ) ),
+			'audience'   => in_array( $rules['audience'], array( 'logged_in', 'logged_out' ), true ) ? $rules['audience'] : 'everyone',
+		);
+	}
+
+	/**
+	 * Whether the app is placed site-wide rather than by shortcode or block.
+	 *
+	 * @param array $app Record.
+	 * @return bool
+	 */
+	public static function is_site_wide( array $app ) {
+		return 'site_wide' === $app['placement'];
+	}
+
+	/**
+	 * One line describing where a site-wide app shows, for the app list.
+	 *
+	 * @param array $app Record.
+	 * @return string
+	 */
+	public static function rules_summary( array $app ) {
+		$rules = self::rules( $app );
+		$parts = array();
+
+		if ( $rules['post_types'] ) {
+			$labels = array();
+
+			foreach ( $rules['post_types'] as $type ) {
+				$object   = get_post_type_object( $type );
+				$labels[] = $object ? $object->labels->name : $type;
+			}
+
+			$parts[] = implode( ', ', $labels );
+		} else {
+			$parts[] = __( 'Every page', 'banzaiembed' );
+		}
+
+		if ( 'logged_in' === $rules['audience'] ) {
+			$parts[] = __( 'logged-in visitors', 'banzaiembed' );
+		} elseif ( 'logged_out' === $rules['audience'] ) {
+			$parts[] = __( 'logged-out visitors', 'banzaiembed' );
+		}
+
+		if ( $rules['exclude'] ) {
+			/* translators: %s: number of excluded pages. */
+			$parts[] = sprintf( _n( '%s excluded', '%s excluded', count( $rules['exclude'] ), 'banzaiembed' ), number_format_i18n( count( $rules['exclude'] ) ) );
+		}
+
+		return implode( ' · ', $parts );
 	}
 
 	/**
@@ -118,6 +205,7 @@ final class App_Manager {
 			$app['created'] = time();
 		}
 
+		$app['modified']      = time();
 		$apps[ $app['slug'] ] = $app;
 		$this->write( $apps );
 	}
@@ -208,6 +296,28 @@ final class App_Manager {
 		}
 
 		return empty( $app['scripts'] ) ? 'needs-entry' : 'ready';
+	}
+
+	/**
+	 * Whether the app is switched on. Separate from status(), which is about
+	 * whether the build can be embedded at all.
+	 *
+	 * @param array $app Record.
+	 * @return bool
+	 */
+	public static function is_active( array $app ) {
+		return ! empty( $app['active'] );
+	}
+
+	/**
+	 * When the record last changed, for records saved before `modified`
+	 * existed too.
+	 *
+	 * @param array $app Record.
+	 * @return int Timestamp, or 0.
+	 */
+	public static function modified( array $app ) {
+		return (int) max( $app['modified'], $app['uploaded'], $app['created'] );
 	}
 
 	/**
@@ -304,6 +414,27 @@ final class App_Manager {
 	 */
 	public function build_url( $slug, $build ) {
 		return $this->base_url() . '/' . rawurlencode( $slug ) . '/' . rawurlencode( $build ) . '/';
+	}
+
+	/**
+	 * How a build's own files should refer to the build folder once
+	 * Path_Rewriter has relocated them: root-relative, so the same files keep
+	 * working over http and https and on any domain pointing at this site.
+	 * When uploads are served from another host (a CDN or offload plugin),
+	 * only the full URL works.
+	 *
+	 * @param string $slug  App slug.
+	 * @param string $build Build ID.
+	 * @return string With a trailing slash.
+	 */
+	public function build_ref( $slug, $build ) {
+		$url = $this->build_url( $slug, $build );
+
+		if ( wp_parse_url( $url, PHP_URL_HOST ) !== wp_parse_url( home_url(), PHP_URL_HOST ) ) {
+			return $url;
+		}
+
+		return (string) wp_parse_url( $url, PHP_URL_PATH );
 	}
 
 	/**

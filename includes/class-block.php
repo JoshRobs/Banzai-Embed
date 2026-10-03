@@ -93,6 +93,7 @@ final class Block {
 				'mountId'     => App_Manager::mount_id( $app ),
 				'status'      => $status,
 				'statusLabel' => App_Manager::status_label( $status ),
+				'active'      => App_Manager::is_active( $app ),
 			);
 		}
 

@@ -3,13 +3,14 @@
     Builds the distributable plugin ZIP.
 
 .DESCRIPTION
-    Until Freemius is wired in this is simply the plugin. Once it is, add
-    'vendor/freemius' to the list below and this becomes the premium build that
-    Freemius generates the free one from — the same flow as BanzaiStyle.
+    This is the premium build. Upload the resulting ZIP to Freemius; Freemius
+    generates the free build from it and, if configured, deploys that to
+    wp.org. Do not hand-assemble a free ZIP alongside it — the same flow as
+    BanzaiStyle.
 
     The file list is an ALLOWLIST, deliberately. A blocklist has to be right
     every time a new file appears in the repo root, and the cost of getting it
-    wrong once is shipping .wp-env.override.json — which will hold the Freemius
+    wrong once is shipping .wp-env.override.json — which holds the Freemius
     secret key — to every customer. Anything not named here does not ship.
 
     The archive contains a single top-level directory named for the slug, which
@@ -49,13 +50,13 @@ $version = $Matches[1]
 # Everything that ships. Directories are copied whole.
 $include = @(
     "$slug.php",
-    'uninstall.php',
     'readme.txt',
     'license.txt',
     'includes',
     'assets',
     'blocks',
-    'templates'
+    'templates',
+    'vendor/freemius'
 )
 
 $staging = Join-Path ([System.IO.Path]::GetTempPath()) "bzem-build-$([guid]::NewGuid().ToString('N'))"

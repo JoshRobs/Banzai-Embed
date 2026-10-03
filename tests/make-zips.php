@@ -6,9 +6,11 @@
  *
  *     npx @wordpress/env run cli php wp-content/plugins/Banzai-Embed/tests/make-zips.php
  *
- * The three real builds come from `npm create vite` (Vue and React templates),
- * built once with the default `base: '/'` and once with `--base=./ --manifest`,
- * and copied into tests/fixtures/{vue-rooted,vue-relative,react-relative}.
+ * The real builds come from `npm create vite` (Vue and React templates),
+ * built with the default `base: '/'` (vue-rooted), with `--base=./ --manifest`
+ * (vue-relative, react-relative), with `--base=/old_staging/wp-content/plugins/old-plugin/`
+ * plus a 12 KB @font-face file (vue-subbase), and with a dynamic import()
+ * (vue-lazy-rooted), and copied into tests/fixtures/.
  * Everything else is synthesised here.
  *
  * @package BanzaiEmbed
@@ -73,6 +75,15 @@ $fixtures = $root . '/tests/fixtures';
 bzem_zip_dir( $fixtures . '/vue-rooted', $out . '/vue-rooted.zip' );
 bzem_zip_dir( $fixtures . '/vue-relative', $out . '/vue-relative-wrapped.zip', 'dist' );
 bzem_zip_dir( $fixtures . '/react-relative', $out . '/react-relative-backslash.zip', '', true );
+
+// Compiled for somewhere else: `--base=/old_staging/wp-content/plugins/old-plugin/`,
+// with a >4 KB font in the CSS so Vite emits it as a file. Every image, font
+// and public/ reference must be rewritten; no warning, as there are no chunks.
+bzem_zip_dir( $fixtures . '/vue-subbase', $out . '/vue-subbase.zip' );
+
+// Default `base: '/'` plus a dynamic import(): references are rewritten, but
+// the lazy chunk keeps the "rebuild with base './'" warning.
+bzem_zip_dir( $fixtures . '/vue-lazy-rooted', $out . '/vue-lazy-rooted.zip' );
 
 // The same React build without index.html, so the Vite manifest is used.
 $zip = new ZipArchive();

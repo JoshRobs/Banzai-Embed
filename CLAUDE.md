@@ -231,5 +231,7 @@ The plugin is built. Where it departs from the spec above, it does so deliberate
 - **Scripts** are printed as `type="module"` (Vite) or `defer` (classic), detected per build.
 - **Managing apps** needs `manage_options` + `unfiltered_html`. Only allowlisted static file types are ever written from a zip.
 - **Forms** post to admin-post.php, not AJAX.
-- **Not built:** the "use WP's bundled React" option (a build-time decision the plugin can't make). Pro features: only the license seam exists; Freemius is not initialised (no product ID yet).
-- **Pro cautions:** inlining current-user data leaks it through page caches — use a REST endpoint; the "custom PHP snippets" feature is eval() and should be dropped.
+- **Not built:** the "use WP's bundled React" option (a build-time decision the plugin can't make). Freemius is not initialised (no product ID yet); `BZEM_SIMULATE_PRO` unlocks pro for development.
+- **Pro built:** Data Bridge and Environment Variables, as one card (`Data_Bridge`). Page data and env are inlined; user data is fetched by the app via `cfg.user()` from an uncached endpoint, because inlining it leaks it through page caches. "Custom PHP snippets" were dropped (eval) — the `bzem/app_data` / `bzem/user_data` filters replace them.
+- **Pro built:** per-app custom CSS/JS (`Custom_Code`). "After" JS waits for the app to render into its mount element — an inline script after a module tag would run before it.
+- **Pro not built yet:** multi-page routing.

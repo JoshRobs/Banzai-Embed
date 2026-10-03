@@ -18,6 +18,8 @@ includes/
   class-admin.php               menu, list/edit screens, admin-post handlers, notices
   class-filesystem.php          the only code that touches the disk (WP_Filesystem_Direct)
   class-license.php             Freemius seam; fails closed
+  class-data-bridge.php         pro: cfg.data, cfg.env, cfg.user() and the admin card behind them
+  class-custom-code.php         pro: per-app CSS, and JS before/after the app
 blocks/app/block.json           block metadata (editor script registered by handle — no build step)
 templates/                      admin screens
 assets/js, assets/css           admin.js, block.js (plain ES5, wp.* globals), styles
@@ -92,10 +94,43 @@ window.banzaiEmbed["my-app"] = { slug, baseUrl, mountId, mounts: ["app", "app-2"
 
 `License::PRO_AVAILABLE` is false and Freemius is not initialised — there is no product ID yet. `bzem_has_valid_license()` is the single gate and fails closed; `BZEM_SIMULATE_PRO` in wp-config.php opens it for development. When Freemius is set up, copy BanzaiStyle's main-file structure, including the `function_exists( 'banzaiembed_fs' )` / `else` wrapper — see the comment in banzaiembed.php.
 
-Notes for the pro features as specced:
+Pro modules are constructed in `Plugin::run()` only when the license is valid, so an unlicensed site runs none of their code. Their configuration stays on the app record when a license lapses; the app just stops receiving it. They plug into the free code through four seams: `bzem/app_data` (the app's object), `bzem/enqueued` (inline JS before the app), `bzem/edit_cards` (a card on the edit screen) and `bzem/save_app` (reading that card on save).
 
-- **Data Bridge — current user data.** Anything per-user printed into the page HTML is cached by page caches and served to the next visitor: one user's email in another's page. Per-user values (and the REST nonce, which goes stale in a cached page) should come from a REST endpoint the app calls, not be inlined. Page-level values (post ID, title, REST base URL) are safe to inline via `bzem/app_data`.
-- **Custom PHP snippets** are `eval()` of admin-entered code. Recommend dropping it: it is a remote code execution feature that wp.org reviewers and security scanners will flag, and a `bzem/app_data` filter in a site's own code does the same job.
+### Data Bridge (and environment variables)
+
+`Data_Bridge` — spec items 7 and 10 in one card, stored as `bridge` on the record (`{ values, env, user }`). The app sees:
+
+```js
+cfg.data.planName      // page data: text, post fields/custom fields, site fields
+cfg.env.API_URL        // environment variables
+await cfg.user()       // { loggedIn, id?, displayName?, email?, roles?, nonce? }
+```
+
+Split by whether a page cache may store the value:
+
+- **Page data and env are inlined** via `bzem/app_data`. They are the same for every visitor to a URL. Post values come from the queried object on singular views and are `null` elsewhere — an embed in an archive's widget gets nothing rather than whichever post was in the loop. Custom fields: protected (`_`-prefixed) keys are refused, and none are output for a password-protected post.
+- **User data is fetched**, never inlined: a page cache would serve one user's email to the next visitor, and a cached REST nonce goes stale. `cfg.user()` calls `admin-ajax.php?action=bzem_user&app={slug}` (no-store). Not a REST route, because REST treats a cookie without a nonce as logged out — and the nonce is what is being fetched. The URL is relative so it is always same-origin with the page and the login cookie goes along; the same-origin policy stops other sites reading it. The promise is shared and refetched after an hour, on `cfg.user(true)`, or after a failure. `bzem/user_data` filters the payload (the place for user meta).
+- **Env**: the staging value is used whenever `wp_get_environment_type()` is not `production`, falling back to the production value. Values are strings.
+- The data object is encoded with `JSON_HEX_TAG | JSON_HEX_AMP`. Custom fields are writable by authors, and `<!--<script>` inside an inline script derails the HTML parser.
+- Keys must be JS identifiers (`cfg.data.key` must work); invalid, duplicate and over-cap (50) rows are dropped with a notice listing why.
+
+**Custom PHP snippets** (in the spec) are deliberately not built: they are `eval()` of admin-entered code, which wp.org reviewers and security scanners flag. `bzem/app_data` and `bzem/user_data` in a site's own code do the same job.
+
+### Custom CSS & JS
+
+`Custom_Code` — spec item 9, stored as `custom_code` on the record (`{ css, js_before, js_after }`), edited in WordPress's code editor (CodeMirror via `wp_enqueue_code_editor()`, which falls back to plain textareas when the user has syntax highlighting off).
+
+- **CSS** goes on an empty style handle that depends on the app's stylesheets, so it prints after them and wins at equal specificity. It lands in `<head>` whenever the app's own CSS does (see `prescan()`). It is not scoped automatically — the card tells the admin to start selectors with `.bzem-app-{slug}`, which every mount element has.
+- **JS before** is an inline script before the app's first script, hooked after the Data Bridge so `cfg.user()` already exists.
+- **JS after** cannot be an inline script after the app's tag: modules and deferred scripts execute after parsing, so it would run *first*. Instead it waits for `DOMContentLoaded` (by which point the entry has executed), then for the first mount element to get content (a `MutationObserver`, since React and Vue render asynchronously). If the element is missing or already has content, it runs at `DOMContentLoaded`. Once per page, however many instances.
+- Both JS snippets run inside `function(cfg){…}`, so `cfg` is to hand and variables stay local. Code goes in on newlines so a trailing `//` comment cannot swallow the closing brace.
+- `</script` and `</style` are rewritten to `<\/script` / `<\/style`. That means the same inside a JS string, regex or comment and a CSS string; anywhere else the code was already broken. Nothing else is filtered: only users with `unfiltered_html` can save it.
+- 50 KB per field (it is in an autoloaded option); an oversized field keeps its previous value and the admin is told.
+
+When `License::PRO_AVAILABLE` is true and the license is not valid, the edit screen shows locked Data Bridge and Custom CSS & JS cards in their place.
+
+### Still to build
+
 - **Routing** — rewrite rules need flushing on change and must not swallow real child pages; plan for it as its own piece of work.
 
 ## What is not built

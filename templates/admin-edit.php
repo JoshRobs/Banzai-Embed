@@ -12,6 +12,7 @@
 
 use BanzaiEmbed\Admin;
 use BanzaiEmbed\App_Manager;
+use BanzaiEmbed\License;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -173,6 +174,29 @@ $default_mount = '' !== $record['detected_mount_id'] ? $record['detected_mount_i
 							<?php endif; ?>
 						<?php endforeach; ?>
 					</details>
+				</div>
+			<?php endif; ?>
+
+			<?php
+			if ( ! $is_new ) {
+				/**
+				 * Print cards in the edit form, below the entry files. Pro
+				 * modules add theirs here and read them in `bzem/save_app`.
+				 *
+				 * @param array $app Record.
+				 */
+				do_action( 'bzem/edit_cards', $record );
+			}
+			?>
+
+			<?php if ( ! $is_new && ! bzem_has_valid_license() && License::is_pro_available() ) : ?>
+				<div class="bzem-card bzem-locked">
+					<h2><?php esc_html_e( 'Data Bridge', 'banzaiembed' ); ?> <span class="bzem-pro-badge"><?php esc_html_e( 'Pro', 'banzaiembed' ); ?></span></h2>
+					<p><?php esc_html_e( 'Give your app WordPress data — the current post, custom fields, site details, environment variables, and the logged-in user with a REST API nonce — without writing any PHP.', 'banzaiembed' ); ?></p>
+				</div>
+				<div class="bzem-card bzem-locked">
+					<h2><?php esc_html_e( 'Custom CSS & JS', 'banzaiembed' ); ?> <span class="bzem-pro-badge"><?php esc_html_e( 'Pro', 'banzaiembed' ); ?></span></h2>
+					<p><?php esc_html_e( 'Add CSS that loads with this app, and JavaScript that runs before it starts or once it has rendered — for sizing, configuration, event listeners and analytics.', 'banzaiembed' ); ?></p>
 				</div>
 			<?php endif; ?>
 

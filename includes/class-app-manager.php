@@ -61,6 +61,18 @@ final class App_Manager {
 			'detected_by'       => '',
 			'warnings'          => array(),
 			'created'           => 0,
+			// Pro: Data_Bridge::config() — page values, env vars, user fields.
+			'bridge'            => array(
+				'values' => array(),
+				'env'    => array(),
+				'user'   => array(),
+			),
+			// Pro: Custom_Code::config().
+			'custom_code'       => array(
+				'css'       => '',
+				'js_before' => '',
+				'js_after'  => '',
+			),
 		);
 	}
 

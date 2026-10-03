@@ -75,6 +75,11 @@ final class Plugin {
 			$this->admin->register();
 		}
 
+		if ( bzem_has_valid_license() ) {
+			( new Data_Bridge( $this->apps ) )->register();
+			( new Custom_Code() )->register();
+		}
+
 		/**
 		 * Fires once the plugin is active. Pro modules hook here.
 		 *

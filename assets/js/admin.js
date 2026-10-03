@@ -167,11 +167,90 @@
 		});
 	}
 
+	/**
+	 * Data Bridge rows: add (cloning the section's <template>), remove, and
+	 * show the value field only for sources that take one.
+	 */
+	function initBridge() {
+		var card = document.querySelector(".bzem-bridge");
+
+		if (!card) {
+			return;
+		}
+
+		// Row indexes only need to be unique within one submit.
+		var next = Date.now();
+
+		function syncValue(select) {
+			var option = select.options[select.selectedIndex];
+			var input = select.closest("tr").querySelector(".bzem-bridge-value");
+			var placeholder = option && option.getAttribute("data-placeholder");
+
+			input.hidden = !placeholder;
+
+			if (placeholder) {
+				input.placeholder = placeholder;
+			}
+		}
+
+		card.addEventListener("change", function (event) {
+			if (event.target.matches(".bzem-bridge-source")) {
+				syncValue(event.target);
+			}
+		});
+
+		card.addEventListener("click", function (event) {
+			var add = event.target.closest(".bzem-bridge-add");
+			var remove = event.target.closest(".bzem-bridge-remove");
+
+			if (add) {
+				// The add button's <p> follows the section's <template>.
+				var template = add.parentNode.previousElementSibling;
+				var rows = template.previousElementSibling.querySelector(".bzem-bridge-rows");
+				var html = template.innerHTML.replace(/__i__/g, String(next++));
+
+				rows.insertAdjacentHTML("beforeend", html);
+				rows.lastElementChild.querySelector("input").focus();
+			} else if (remove) {
+				var row = remove.closest("tr");
+				var body = row.parentNode;
+
+				// Keep one row to type into; clearing it saves as "no rows".
+				if (body.children.length > 1) {
+					body.removeChild(row);
+				} else {
+					row.querySelectorAll("input").forEach(function (input) {
+						input.value = "";
+					});
+				}
+			}
+		});
+	}
+
+	/**
+	 * Custom CSS & JS: WordPress's CodeMirror, when the server enqueued it
+	 * (it does not if the user turned syntax highlighting off). CodeMirror
+	 * copies itself back into the textarea when the form submits.
+	 */
+	function initCodeEditors() {
+		var settings = window.bzemCodeEditor;
+
+		if (!settings || !wp.codeEditor) {
+			return;
+		}
+
+		document.querySelectorAll(".bzem-code-editor").forEach(function (area) {
+			wp.codeEditor.initialize(area, settings[area.getAttribute("data-mode")]);
+		});
+	}
+
 	document.addEventListener("DOMContentLoaded", function () {
 		initSlug();
+		initCodeEditors();
 		initCopy();
 		initDelete();
 		initDropzone();
 		initEntryPicker();
+		initBridge();
 	});
 })();

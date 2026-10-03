@@ -266,11 +266,23 @@ final class Embed {
 		 */
 		$data = apply_filters( 'bzem/app_data', $data, $app );
 
+		// Tags hex-escaped: values can come from post meta that authors write,
+		// and "<!--" or "<script" in an inline script derails the HTML parser.
 		wp_add_inline_script(
 			$first,
-			sprintf( 'window.banzaiEmbed=window.banzaiEmbed||{};window.banzaiEmbed[%s]=%s;', wp_json_encode( $slug ), wp_json_encode( $data ) ),
+			sprintf( 'window.banzaiEmbed=window.banzaiEmbed||{};window.banzaiEmbed[%s]=%s;', wp_json_encode( $slug ), wp_json_encode( $data, JSON_HEX_TAG | JSON_HEX_AMP ) ),
 			'before'
 		);
+
+		/**
+		 * Fires once an app's assets and data object are enqueued. Inline
+		 * scripts added 'before' $handle now run after the data object and
+		 * before the app.
+		 *
+		 * @param array  $app    App record.
+		 * @param string $handle Handle of the app's first script.
+		 */
+		do_action( 'bzem/enqueued', $app, $first );
 
 		$this->enqueued[ $slug ] = $first;
 

@@ -150,6 +150,76 @@
 	list-style: disc;
 }
 
+/* Data Bridge (pro) */
+.bzem-bridge h3,
+.bzem-custom-code h3 {
+	margin: 1.6em 0 0.3em;
+	font-size: 1em;
+}
+
+/* Custom CSS & JS (pro) */
+.bzem-custom-code .CodeMirror {
+	height: 180px;
+	margin-top: 8px;
+	border: 1px solid #dcdcde;
+}
+
+.bzem-bridge h3 code {
+	font-weight: 400;
+}
+
+.bzem-bridge-table {
+	margin-top: 8px;
+}
+
+.bzem-bridge-table td {
+	vertical-align: middle;
+}
+
+.bzem-bridge-table input[type="text"],
+.bzem-bridge-table select {
+	width: 100%;
+}
+
+.bzem-bridge-table th:last-child,
+.bzem-bridge-table td:last-child {
+	width: 24px;
+	text-align: center;
+}
+
+.bzem-bridge-remove {
+	font-size: 18px;
+	line-height: 1;
+	color: #b32d2e;
+	text-decoration: none;
+}
+
+.bzem-bridge-user {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px 20px;
+	margin: 8px 0;
+}
+
+.bzem-bridge-usage {
+	margin-top: 16px;
+}
+
+.bzem-pro-badge {
+	display: inline-block;
+	padding: 1px 6px;
+	border-radius: 3px;
+	background: #2271b1;
+	color: #fff;
+	font-size: 11px;
+	font-weight: 600;
+	vertical-align: middle;
+}
+
+.bzem-locked {
+	opacity: 0.75;
+}
+
 .bzem-wrap .submitdelete {
 	color: #b32d2e;
 }

@@ -18,7 +18,7 @@ $scope = '.bzem-app-' . $app['slug'];
 ?>
 <section class="bzem-card bzem-card-pro bzem-custom-code">
 	<header class="bzem-card-header">
-		<h2><span class="bzem-card-icon dashicons dashicons-editor-code" aria-hidden="true"></span><?php esc_html_e( 'Custom CSS & JS', 'banzaiembed' ); ?></h2>
+		<h2><span class="bzem-card-icon dashicons dashicons-editor-code" aria-hidden="true"></span><?php esc_html_e( 'Custom CSS & JS', 'banzaiembed' ); ?><?php \BanzaiEmbed\Help::button( 'custom-code' ); ?></h2>
 		<span class="bzem-pro-badge"><span class="dashicons dashicons-star-filled" aria-hidden="true"></span><?php esc_html_e( 'Pro', 'banzaiembed' ); ?></span>
 	</header>
 	<div class="bzem-card-body">

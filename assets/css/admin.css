@@ -1598,3 +1598,318 @@ a.bzem-licence.is-active:focus {
 	line-height: 1;
 	vertical-align: middle;
 }
+
+/* ---------- Help ---------- */
+
+/* The "?" after a card's title. */
+.bzem-help-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 22px;
+	height: 22px;
+	margin-left: -4px;
+	border-radius: 50%;
+	color: var(--bzem-faint);
+	text-decoration: none;
+}
+
+.bzem-help-button:hover,
+.bzem-help-button:focus {
+	background: var(--bzem-accent-soft);
+	color: var(--bzem-accent);
+}
+
+.bzem-help-button .dashicons {
+	width: 18px;
+	height: 18px;
+	font-size: 18px;
+}
+
+/* "Help" in the brand bar. */
+.bzem-header-help {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 3px 10px 3px 6px;
+	border-radius: 999px;
+	color: var(--bzem-muted);
+	font-size: 13px;
+	text-decoration: none;
+}
+
+.bzem-header-help:hover,
+.bzem-header-help:focus,
+.bzem-header-help.is-current {
+	background: var(--bzem-accent-soft);
+	color: var(--bzem-accent);
+}
+
+.bzem-header-help .dashicons {
+	width: 18px;
+	height: 18px;
+	font-size: 18px;
+}
+
+/* The pop-up. No padding on the dialog itself: a click that lands on it
+   is a click on the backdrop. */
+.bzem-help-dialog {
+	width: min(680px, calc(100vw - 32px));
+	max-height: min(80vh, 760px);
+	padding: 0;
+	border: 0;
+	border-radius: 12px;
+	box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+	color: var(--bzem-text);
+}
+
+.bzem-help-dialog[open] {
+	display: flex;
+	flex-direction: column;
+}
+
+.bzem-help-dialog::backdrop {
+	background: rgba(15, 23, 30, 0.45);
+}
+
+.bzem-help-dialog-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 16px 20px;
+	border-bottom: 1px solid var(--bzem-rule);
+}
+
+.bzem-help-dialog-head h2 {
+	margin: 0;
+	color: var(--bzem-ink);
+	font-size: 16px;
+}
+
+.bzem-help-dialog-head h2.is-pro::after {
+	content: "Pro";
+	margin-left: 8px;
+	padding: 2px 8px;
+	border-radius: 999px;
+	background: var(--bzem-brand-h);
+	color: #062b2b;
+	font-size: 11px;
+	font-weight: 600;
+	vertical-align: middle;
+}
+
+.bzem-help-dialog-close {
+	padding: 4px;
+	border: 0;
+	border-radius: 6px;
+	background: none;
+	color: var(--bzem-muted);
+	cursor: pointer;
+}
+
+.bzem-help-dialog-close:hover,
+.bzem-help-dialog-close:focus {
+	background: var(--bzem-rule);
+	color: var(--bzem-ink);
+}
+
+.bzem-help-dialog-body {
+	flex: 1;
+	padding: 4px 20px 16px;
+	overflow-y: auto;
+}
+
+.bzem-help-dialog-foot {
+	padding: 12px 20px;
+	border-top: 1px solid var(--bzem-rule);
+	background: var(--bzem-surface);
+	border-radius: 0 0 12px 12px;
+}
+
+.bzem-help-dialog-more {
+	display: inline-flex;
+	align-items: center;
+	gap: 2px;
+	text-decoration: none;
+}
+
+.bzem-help-dialog-more .dashicons {
+	width: 16px;
+	height: 16px;
+	font-size: 16px;
+}
+
+/* A topic, in the pop-up or on the Help screen. */
+.bzem-help-topic {
+	font-size: 13px;
+	line-height: 1.6;
+}
+
+.bzem-help-topic h3 {
+	margin: 20px 0 6px;
+	color: var(--bzem-ink);
+	font-size: 14px;
+}
+
+.bzem-help-topic ul,
+.bzem-help-topic ol {
+	margin: 6px 0 10px 20px;
+}
+
+.bzem-help-topic ul {
+	list-style: disc;
+}
+
+.bzem-help-topic li {
+	margin-bottom: 4px;
+}
+
+.bzem-help-lead {
+	margin: 14px 0 4px;
+	color: var(--bzem-ink);
+	font-size: 14px;
+}
+
+/* "Use it when" / "Skip it when", side by side. */
+.bzem-help-when {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+	gap: 12px;
+	margin: 14px 0;
+}
+
+.bzem-help-when > div {
+	padding: 4px 14px 6px;
+	border: 1px solid var(--bzem-rule);
+	border-radius: var(--bzem-radius);
+	background: #fafbfc;
+}
+
+.bzem-help-when > div:first-child {
+	border-color: #c5e6cf;
+	background: #f4fbf6;
+}
+
+.bzem-help-when h3 {
+	margin-top: 10px;
+	font-size: 13px;
+}
+
+.bzem-help-test {
+	margin: 14px 0;
+	padding: 10px 14px;
+	border-left: 4px solid var(--bzem-accent);
+	border-radius: 0 var(--bzem-radius) var(--bzem-radius) 0;
+	background: var(--bzem-accent-soft);
+}
+
+.bzem-help-test strong {
+	display: block;
+	color: var(--bzem-ink);
+}
+
+/* The Help screen. */
+.bzem-help-intro {
+	max-width: 720px;
+	margin: 4px 0 0;
+	color: var(--bzem-muted);
+}
+
+.bzem-help-page {
+	max-width: 900px;
+	margin-top: 16px;
+}
+
+.bzem-help-symptoms {
+	margin: 0;
+}
+
+.bzem-help-symptoms li {
+	margin: 0;
+	border-bottom: 1px solid var(--bzem-rule);
+}
+
+.bzem-help-symptoms li:last-child {
+	border-bottom: 0;
+}
+
+.bzem-help-symptoms a {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 4px 16px;
+	padding: 10px 4px;
+	color: var(--bzem-ink);
+	text-decoration: none;
+}
+
+.bzem-help-symptoms a:hover,
+.bzem-help-symptoms a:focus {
+	color: var(--bzem-accent);
+}
+
+.bzem-help-symptom-topic {
+	display: inline-flex;
+	align-items: center;
+	color: var(--bzem-accent);
+	font-size: 12px;
+	font-weight: 500;
+	white-space: nowrap;
+}
+
+.bzem-help-toc {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin: 0 0 20px;
+}
+
+.bzem-help-toc a {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 6px 12px;
+	border: 1px solid var(--bzem-border);
+	border-radius: 999px;
+	background: #fff;
+	color: var(--bzem-text);
+	font-size: 13px;
+	text-decoration: none;
+}
+
+.bzem-help-toc a:hover,
+.bzem-help-toc a:focus {
+	border-color: var(--bzem-accent);
+	color: var(--bzem-accent);
+}
+
+.bzem-help-toc .dashicons {
+	width: 16px;
+	height: 16px;
+	font-size: 16px;
+}
+
+/* Keep a jumped-to topic clear of the admin bar. */
+.bzem-help-section {
+	scroll-margin-top: 48px;
+}
+
+.bzem-help-section:target {
+	outline: 2px solid var(--bzem-accent);
+	outline-offset: 2px;
+}
+
+.bzem-help-upgrade {
+	margin-top: 16px;
+	padding: 10px 14px;
+	border-radius: var(--bzem-radius);
+	background: #f0fbf9;
+}
+
+.bzem-help-top {
+	margin: 16px 0 0;
+	font-size: 12px;
+	text-align: right;
+}

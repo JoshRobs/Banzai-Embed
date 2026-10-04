@@ -25,6 +25,7 @@ BanzaiEmbed takes the build you already have — the contents of `dist/` or `bui
 * **Several apps per page.** Each gets its own mount point, and repeated instances get unique IDs.
 * **Isolated display for apps built to run on their own.** Show an app in the page, or give it its own page in a frame. Isolated, its CSS can't restyle your theme and your theme's can't restyle it, and a router written for the site root (`/play/…`) works without changes.
 * **Switch apps on and off.** Turn an app off from the app list and it disappears from every page it is embedded on — no need to edit those pages — until you turn it back on.
+* **Help where you need it.** A ? on every setting explains when to use it, and the Help page starts from the problem you're seeing — "my app changed my site's fonts", "refreshing shows Page not found" — and points to the fix.
 * **Painless updates.** Upload a new build and every URL changes, so no browser or CDN can serve stale files. The previous build is kept, so pages cached before the update keep working.
 
 **Images and fonts just work**

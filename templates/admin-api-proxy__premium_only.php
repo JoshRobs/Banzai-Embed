@@ -31,7 +31,7 @@ $blank = array(
 ?>
 <section class="bzem-card bzem-card-pro bzem-proxy">
 	<header class="bzem-card-header">
-		<h2><span class="bzem-card-icon dashicons dashicons-cloud" aria-hidden="true"></span><?php esc_html_e( 'API proxy', 'banzaiembed' ); ?></h2>
+		<h2><span class="bzem-card-icon dashicons dashicons-cloud" aria-hidden="true"></span><?php esc_html_e( 'API proxy', 'banzaiembed' ); ?><?php \BanzaiEmbed\Help::button( 'api-proxy' ); ?></h2>
 		<span class="bzem-pro-badge"><span class="dashicons dashicons-star-filled" aria-hidden="true"></span><?php esc_html_e( 'Pro', 'banzaiembed' ); ?></span>
 	</header>
 	<div class="bzem-card-body">

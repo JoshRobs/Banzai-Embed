@@ -337,6 +337,57 @@
 	 * filter long page lists. Without this everything is simply visible.
 	 */
 	/**
+	 * Help pop-ups: the "?" on a card opens its topic in a dialog instead of
+	 * the Help screen, so an unsaved form stays as it is. Without JavaScript,
+	 * or without <dialog>, the "?" is a link to the Help screen in a new tab.
+	 */
+	function initHelp() {
+		var dialog = document.querySelector(".bzem-help-dialog");
+
+		if (!dialog || typeof dialog.showModal !== "function") {
+			return;
+		}
+
+		var title = dialog.querySelector("#bzem-help-dialog-title");
+		var body = dialog.querySelector(".bzem-help-dialog-body");
+		var more = dialog.querySelector(".bzem-help-dialog-more");
+
+		document.addEventListener("click", function (event) {
+			var button = event.target.closest("[data-bzem-help]");
+
+			if (!button) {
+				return;
+			}
+
+			var template = document.querySelector('template[data-bzem-help-topic="' + button.getAttribute("data-bzem-help") + '"]');
+
+			if (!template) {
+				return;
+			}
+
+			event.preventDefault();
+			title.textContent = template.getAttribute("data-title");
+			title.classList.toggle("is-pro", template.getAttribute("data-pro") === "1");
+			body.innerHTML = "";
+			body.appendChild(template.content.cloneNode(true));
+			more.href = template.getAttribute("data-url");
+			dialog.showModal();
+			body.scrollTop = 0;
+		});
+
+		dialog.querySelector("[data-bzem-help-close]").addEventListener("click", function () {
+			dialog.close();
+		});
+
+		// A click on the backdrop lands on the dialog element itself.
+		dialog.addEventListener("click", function (event) {
+			if (event.target === dialog) {
+				dialog.close();
+			}
+		});
+	}
+
+	/**
 	 * Display: show the frame's options only while Isolated is chosen.
 	 */
 	function initDisplay() {
@@ -517,6 +568,7 @@
 		initEntryPicker();
 		initToggles();
 		initPlacement();
+		initHelp();
 		initDisplay();
 		initRouting();
 		initLicence();

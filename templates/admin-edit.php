@@ -12,6 +12,7 @@
 
 use BanzaiEmbed\Admin;
 use BanzaiEmbed\App_Manager;
+use BanzaiEmbed\Help;
 use BanzaiEmbed\License;
 
 defined( 'ABSPATH' ) || exit;
@@ -70,7 +71,7 @@ $default_mount = '' !== $record['detected_mount_id'] ? $record['detected_mount_i
 
 			<section class="bzem-card">
 				<header class="bzem-card-header">
-					<h2><span class="bzem-card-icon dashicons dashicons-info-outline" aria-hidden="true"></span><?php esc_html_e( 'App details', 'banzaiembed' ); ?></h2>
+					<h2><span class="bzem-card-icon dashicons dashicons-info-outline" aria-hidden="true"></span><?php esc_html_e( 'App details', 'banzaiembed' ); ?><?php Help::button( 'getting-started' ); ?></h2>
 				</header>
 				<div class="bzem-card-body">
 					<div class="bzem-field">
@@ -129,7 +130,7 @@ $default_mount = '' !== $record['detected_mount_id'] ? $record['detected_mount_i
 			?>
 			<section class="bzem-card bzem-display-card">
 				<header class="bzem-card-header">
-					<h2><span class="bzem-card-icon dashicons dashicons-desktop" aria-hidden="true"></span><?php esc_html_e( 'Display', 'banzaiembed' ); ?></h2>
+					<h2><span class="bzem-card-icon dashicons dashicons-desktop" aria-hidden="true"></span><?php esc_html_e( 'Display', 'banzaiembed' ); ?><?php Help::button( 'display' ); ?></h2>
 				</header>
 				<div class="bzem-card-body">
 					<fieldset>
@@ -188,7 +189,7 @@ $default_mount = '' !== $record['detected_mount_id'] ? $record['detected_mount_i
 			<?php elseif ( License::is_pro_available() ) : ?>
 				<section class="bzem-card bzem-card-pro bzem-upsell">
 					<header class="bzem-card-header">
-						<h2><span class="bzem-card-icon dashicons dashicons-location" aria-hidden="true"></span><?php esc_html_e( 'Placement', 'banzaiembed' ); ?></h2>
+						<h2><span class="bzem-card-icon dashicons dashicons-location" aria-hidden="true"></span><?php esc_html_e( 'Placement', 'banzaiembed' ); ?><?php Help::button( 'placement' ); ?></h2>
 						<span class="bzem-pro-badge"><span class="dashicons dashicons-star-filled" aria-hidden="true"></span><?php esc_html_e( 'Pro', 'banzaiembed' ); ?></span>
 					</header>
 					<div class="bzem-card-body">
@@ -198,7 +199,7 @@ $default_mount = '' !== $record['detected_mount_id'] ? $record['detected_mount_i
 				</section>
 				<section class="bzem-card bzem-card-pro bzem-upsell">
 					<header class="bzem-card-header">
-						<h2><span class="bzem-card-icon dashicons dashicons-randomize" aria-hidden="true"></span><?php esc_html_e( 'Routing', 'banzaiembed' ); ?></h2>
+						<h2><span class="bzem-card-icon dashicons dashicons-randomize" aria-hidden="true"></span><?php esc_html_e( 'Routing', 'banzaiembed' ); ?><?php Help::button( 'routing' ); ?></h2>
 						<span class="bzem-pro-badge"><span class="dashicons dashicons-star-filled" aria-hidden="true"></span><?php esc_html_e( 'Pro', 'banzaiembed' ); ?></span>
 					</header>
 					<div class="bzem-card-body">
@@ -210,7 +211,7 @@ $default_mount = '' !== $record['detected_mount_id'] ? $record['detected_mount_i
 
 			<section class="bzem-card">
 				<header class="bzem-card-header">
-					<h2><span class="bzem-card-icon dashicons dashicons-upload" aria-hidden="true"></span><?php echo $has_build ? esc_html__( 'Replace build', 'banzaiembed' ) : esc_html__( 'Upload build', 'banzaiembed' ); ?></h2>
+					<h2><span class="bzem-card-icon dashicons dashicons-upload" aria-hidden="true"></span><?php echo $has_build ? esc_html__( 'Replace build', 'banzaiembed' ) : esc_html__( 'Upload build', 'banzaiembed' ); ?><?php Help::button( 'getting-started' ); ?></h2>
 				</header>
 				<div class="bzem-card-body">
 					<label class="bzem-dropzone" for="bzem-build">
@@ -245,7 +246,7 @@ $default_mount = '' !== $record['detected_mount_id'] ? $record['detected_mount_i
 			<?php if ( $has_build ) : ?>
 				<section class="bzem-card">
 					<header class="bzem-card-header">
-						<h2><span class="bzem-card-icon dashicons dashicons-media-code" aria-hidden="true"></span><?php esc_html_e( 'Entry files', 'banzaiembed' ); ?></h2>
+						<h2><span class="bzem-card-icon dashicons dashicons-media-code" aria-hidden="true"></span><?php esc_html_e( 'Entry files', 'banzaiembed' ); ?><?php Help::button( 'entry-files' ); ?></h2>
 						<span class="bzem-method"><?php echo esc_html( isset( $methods[ $record['detected_by'] ] ) ? $methods[ $record['detected_by'] ] : $record['detected_by'] ); ?></span>
 					</header>
 					<div class="bzem-card-body">
@@ -314,7 +315,7 @@ $default_mount = '' !== $record['detected_mount_id'] ? $record['detected_mount_i
 			<?php elseif ( ! $is_new && License::is_pro_available() ) : ?>
 				<section class="bzem-card bzem-card-pro bzem-upsell">
 					<header class="bzem-card-header">
-						<h2><span class="bzem-card-icon dashicons dashicons-database-export" aria-hidden="true"></span><?php esc_html_e( 'Data Bridge', 'banzaiembed' ); ?></h2>
+						<h2><span class="bzem-card-icon dashicons dashicons-database-export" aria-hidden="true"></span><?php esc_html_e( 'Data Bridge', 'banzaiembed' ); ?><?php Help::button( 'data-bridge' ); ?></h2>
 						<span class="bzem-pro-badge"><span class="dashicons dashicons-star-filled" aria-hidden="true"></span><?php esc_html_e( 'Pro', 'banzaiembed' ); ?></span>
 					</header>
 					<div class="bzem-card-body">
@@ -324,7 +325,7 @@ $default_mount = '' !== $record['detected_mount_id'] ? $record['detected_mount_i
 				</section>
 				<section class="bzem-card bzem-card-pro bzem-upsell">
 					<header class="bzem-card-header">
-						<h2><span class="bzem-card-icon dashicons dashicons-cloud" aria-hidden="true"></span><?php esc_html_e( 'API proxy', 'banzaiembed' ); ?></h2>
+						<h2><span class="bzem-card-icon dashicons dashicons-cloud" aria-hidden="true"></span><?php esc_html_e( 'API proxy', 'banzaiembed' ); ?><?php Help::button( 'api-proxy' ); ?></h2>
 						<span class="bzem-pro-badge"><span class="dashicons dashicons-star-filled" aria-hidden="true"></span><?php esc_html_e( 'Pro', 'banzaiembed' ); ?></span>
 					</header>
 					<div class="bzem-card-body">
@@ -334,7 +335,7 @@ $default_mount = '' !== $record['detected_mount_id'] ? $record['detected_mount_i
 				</section>
 				<section class="bzem-card bzem-card-pro bzem-upsell">
 					<header class="bzem-card-header">
-						<h2><span class="bzem-card-icon dashicons dashicons-editor-code" aria-hidden="true"></span><?php esc_html_e( 'Custom CSS & JS', 'banzaiembed' ); ?></h2>
+						<h2><span class="bzem-card-icon dashicons dashicons-editor-code" aria-hidden="true"></span><?php esc_html_e( 'Custom CSS & JS', 'banzaiembed' ); ?><?php Help::button( 'custom-code' ); ?></h2>
 						<span class="bzem-pro-badge"><span class="dashicons dashicons-star-filled" aria-hidden="true"></span><?php esc_html_e( 'Pro', 'banzaiembed' ); ?></span>
 					</header>
 					<div class="bzem-card-body">
@@ -422,3 +423,5 @@ for (const id of cfg?.mounts ?? ['<?php echo esc_html( App_Manager::mount_id( $r
 		</div>
 	</div>
 </form>
+
+<?php Help::print_dialog( $is_new ? '' : $record['slug'] ); ?>

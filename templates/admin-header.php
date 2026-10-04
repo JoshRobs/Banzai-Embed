@@ -4,12 +4,13 @@
  *
  * @package BanzaiEmbed
  *
- * @var string $tab    Highlighted tab: 'all', a framework, 'new' or ''.
+ * @var string $tab    Highlighted tab: 'all', a framework, 'new', 'help' or ''.
  * @var int[]  $counts Apps per framework, plus 'all'.
  */
 
 use BanzaiEmbed\Admin;
 use BanzaiEmbed\App_Manager;
+use BanzaiEmbed\Help;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -32,6 +33,9 @@ foreach ( App_Manager::FRAMEWORKS as $fw ) {
 		 */
 		do_action( 'bzem/header_actions' );
 		?>
+		<a class="bzem-header-help<?php echo 'help' === $tab ? ' is-current' : ''; ?>" href="<?php echo esc_url( Help::url() ); ?>"<?php echo 'help' === $tab ? ' aria-current="page"' : ''; ?>>
+			<span class="dashicons dashicons-editor-help" aria-hidden="true"></span><?php esc_html_e( 'Help', 'banzaiembed' ); ?>
+		</a>
 		<span class="bzem-version">v<?php echo esc_html( BZEM_VERSION ); ?></span>
 	</div>
 </div>

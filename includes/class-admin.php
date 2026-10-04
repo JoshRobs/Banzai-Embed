@@ -130,6 +130,15 @@ final class Admin {
 			array( $this, 'render_new' )
 		);
 
+		$this->hooks[] = add_submenu_page(
+			self::PAGE,
+			__( 'BanzaiEmbed Help', 'banzaiembed' ),
+			__( 'Help', 'banzaiembed' ),
+			'manage_options',
+			Help::PAGE,
+			array( $this, 'render_help' )
+		);
+
 		$this->hooks = array_values( array_filter( array_unique( $this->hooks ) ) );
 	}
 
@@ -388,6 +397,13 @@ final class Admin {
 	 */
 	public function render_new() {
 		$this->render_edit( null );
+	}
+
+	/**
+	 * The Help screen.
+	 */
+	public function render_help() {
+		$this->render_template( 'admin-help', array(), 'help' );
 	}
 
 	/**

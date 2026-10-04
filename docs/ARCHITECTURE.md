@@ -15,6 +15,7 @@ includes/
   class-path-rewriter.php       points a build's asset references at its new location
   class-asset-redirect.php      redirects would-be 404s that name a file in an app's build to it
   class-frame.php               serves an Isolated app's own document, loaded in an iframe
+  class-help.php                help topics: the Help screen and the "?" pop-ups on the edit screen
   class-embed.php               mount div + enqueuing + window.banzaiEmbed; shared by shortcode and block
   class-shortcode.php           [banzai-embed] → Embed::render()
   class-block.php               banzaiembed/app → Embed::render(); editor data
@@ -29,7 +30,7 @@ includes/
   class-licence-ui__premium_only.php  Pro: licence status and "Activate licence" on BanzaiEmbed's screens
 vendor/freemius/                Freemius SDK (tracked; ships in the zip)
 blocks/app/block.json           block metadata (editor script registered by handle — no build step)
-templates/                      admin screens
+templates/                      admin screens; templates/help/ holds one file per help topic
 assets/js, assets/css           admin.js, block.js (plain ES5, wp.* globals), styles
 tests/                          fixture builder, e2e upload script, front-end pages
 tools/build.ps1                 allowlist packager
@@ -141,6 +142,8 @@ window.banzaiEmbed["my-app"] = { slug, baseUrl, mountId, mounts: ["app", "app-2"
 Both screens share a brand bar and framework tabs (`templates/admin-header.php`), printed above `.wrap`; the `bzem-admin-page` body class, added only on our two screens (not Freemius' pages in the same menu), removes the content gutter so the bar runs edge to edge. The list is filtered, searched and sorted server-side from query arguments (`framework`, `status`, `s`, `orderby`, `order`) — there are few enough apps that `WP_List_Table`'s pagination machinery would be dead weight, but the markup keeps its classes so the core mobile layout applies.
 
 The on/off switch on each row is a tiny form posting to admin-post.php (`Admin::handle_toggle()`), so it works without JavaScript; admin.js submits the same form with `ajax=1` and gets JSON instead of a redirect. Read the form's URL with `getAttribute('action')`: its `<input name="action">` shadows `form.action`.
+
+**Help.** Every topic is written once, as `templates/help/{id}.php`, and shown two ways by `Help`: all together on BanzaiEmbed → Help (led by a "Fix a problem" list mapping symptoms to topics, since people arrive knowing the symptom, not the feature's name), and one at a time in a `<dialog>` from the "?" after a card's title, so the explanation is where the decision is made and an unsaved form stays put. The edit screen prints every topic into a `<template>`; admin.js clones the one asked for into the dialog. Without JavaScript the "?" is a link to the topic on the Help screen in a new tab. Topics take the app slug for code examples. Pro topics ship in the free build too (they are documentation, not features), marked Pro with an upgrade link, and are dropped when `License::is_pro_available()` is false. Add a topic by adding it to `Help::topics()` (and a symptom to `Help::symptoms()` if one fits) and calling `Help::button()` in the card it explains.
 
 ## Pro
 

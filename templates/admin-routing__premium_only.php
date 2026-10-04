@@ -19,7 +19,7 @@ $bzem_slug = '' !== $record['slug'] ? $record['slug'] : 'my-app';
 ?>
 <section class="bzem-card bzem-card-pro bzem-routing-card">
 	<header class="bzem-card-header">
-		<h2><span class="bzem-card-icon dashicons dashicons-randomize" aria-hidden="true"></span><?php esc_html_e( 'Routing', 'banzaiembed' ); ?></h2>
+		<h2><span class="bzem-card-icon dashicons dashicons-randomize" aria-hidden="true"></span><?php esc_html_e( 'Routing', 'banzaiembed' ); ?><?php \BanzaiEmbed\Help::button( 'routing' ); ?></h2>
 		<span class="bzem-pro-badge"><span class="dashicons dashicons-star-filled" aria-hidden="true"></span><?php esc_html_e( 'Pro', 'banzaiembed' ); ?></span>
 	</header>
 	<div class="bzem-card-body">
@@ -54,7 +54,7 @@ $bzem_slug = '' !== $record['slug'] ? $record['slug'] : 'my-app';
 				<span class="bzem-switch" aria-hidden="true"></span>
 				<span class="bzem-switch-text"><?php esc_html_e( 'This app has its own router', 'banzaiembed' ); ?></span>
 			</label>
-			<p class="description"><?php esc_html_e( 'For apps using React Router, Vue Router or similar. Paths below the page the app is on — /portal/settings, /portal/orders/42 — load that page instead of a "not found" page, and your app\'s router shows the right screen.', 'banzaiembed' ); ?></p>
+			<p class="description"><?php esc_html_e( 'Not sure? Open one of your app\'s inner screens, copy the address into a new tab, and load it. If you get "Page not found", turn this on: paths below the page the app is on — /portal/settings, /portal/orders/42 — then load that page, and your app shows the right screen.', 'banzaiembed' ); ?></p>
 
 			<div class="bzem-routing-details" data-bzem-routing-details>
 				<h3 class="bzem-section-title"><?php esc_html_e( 'Pages it routes under', 'banzaiembed' ); ?></h3>

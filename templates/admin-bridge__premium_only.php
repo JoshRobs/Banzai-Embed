@@ -67,7 +67,7 @@ $blank_env   = array(
 ?>
 <section class="bzem-card bzem-card-pro bzem-bridge">
 	<header class="bzem-card-header">
-		<h2><span class="bzem-card-icon dashicons dashicons-database-export" aria-hidden="true"></span><?php esc_html_e( 'Data Bridge', 'banzaiembed' ); ?></h2>
+		<h2><span class="bzem-card-icon dashicons dashicons-database-export" aria-hidden="true"></span><?php esc_html_e( 'Data Bridge', 'banzaiembed' ); ?><?php \BanzaiEmbed\Help::button( 'data-bridge' ); ?></h2>
 		<span class="bzem-pro-badge"><span class="dashicons dashicons-star-filled" aria-hidden="true"></span><?php esc_html_e( 'Pro', 'banzaiembed' ); ?></span>
 	</header>
 	<div class="bzem-card-body">

@@ -26,7 +26,7 @@ $bzem_scope = $rules['post_types'] ? 'post_types' : 'all';
 ?>
 <section class="bzem-card bzem-card-pro bzem-placement-card">
 	<header class="bzem-card-header">
-		<h2><span class="bzem-card-icon dashicons dashicons-location" aria-hidden="true"></span><?php esc_html_e( 'Placement', 'banzaiembed' ); ?></h2>
+		<h2><span class="bzem-card-icon dashicons dashicons-location" aria-hidden="true"></span><?php esc_html_e( 'Placement', 'banzaiembed' ); ?><?php \BanzaiEmbed\Help::button( 'placement' ); ?></h2>
 		<span class="bzem-pro-badge"><span class="dashicons dashicons-star-filled" aria-hidden="true"></span><?php esc_html_e( 'Pro', 'banzaiembed' ); ?></span>
 	</header>
 	<div class="bzem-card-body">

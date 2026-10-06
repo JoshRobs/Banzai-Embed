@@ -1,6 +1,6 @@
 <?php
 /**
- * Help topic: Site-wide placement (Pro).
+ * Help topic: Site-wide placement.
  *
  * @package BanzaiEmbed
  *

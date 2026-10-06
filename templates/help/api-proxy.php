@@ -1,6 +1,6 @@
 <?php
 /**
- * Help topic: API proxy (Pro).
+ * Help topic: API proxy.
  *
  * @package BanzaiEmbed
  *

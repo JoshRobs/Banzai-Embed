@@ -16,6 +16,8 @@ You built a calculator, a configurator, a dashboard or a booking widget in Vue o
 
 BanzaiEmbed takes the build you already have — the contents of `dist/` or `build/` — as a zip, works out which files boot it, and gives you a shortcode and a block to put it anywhere. Nothing is compiled on the server, so it works on any host.
 
+BanzaiEmbed is free and open source. Every feature below is included, with no limits on apps or pages and no licence key. It is distributed on GitHub: https://github.com/JoshRobs/Banzai-Embed
+
 **What you get**
 
 * **Upload a zip, get a shortcode.** `[banzai-embed app="my-app"]` — or the BanzaiEmbed App block in the block editor.
@@ -38,9 +40,7 @@ If BanzaiEmbed can't relocate an app's lazy-loaded chunks, it will tell you; bui
 * Create React App: `"homepage": "."` in `package.json`
 * webpack 5: `output.publicPath: 'auto'`
 
-**BanzaiEmbed Pro**
-
-Everything above is free, with no limits on apps or pages. Pro adds what you'd otherwise write a custom plugin for:
+**What you'd otherwise write a custom plugin for**
 
 * **Data Bridge.** Give your app WordPress data with no PHP. Choose values in the app's settings — the current post's ID, title, URL or custom fields, the site's name or REST API address, or your own text — and your app reads them from `window.banzaiEmbed['my-app'].data`. A React calculator on a property listing can start from that listing's price; one build works on every page.
 * **Logged-in user data, safe with page caching.** Your app calls `cfg.user()` to get the current visitor's ID, display name, email or roles, and a REST API nonce for making authenticated requests. It's fetched fresh for each visitor, never written into the page, so a page cache can't show one visitor's details to another.
@@ -50,15 +50,24 @@ Everything above is free, with no limits on apps or pages. Pro adds what you'd o
 * **API proxy.** Built for Netlify or Vercel, your app calls its backend as `fetch('/api/…')`. Forward those paths to wherever the backend runs — a serverless function or your own API — and the app works on WordPress unchanged, with no CORS to set up. Visitors' cookies and WordPress logins are never passed on.
 * **Client-side routing.** Using React Router or Vue Router? Put your app on a page such as `/portal/`, and links, bookmarks and refreshes on `/portal/settings` or `/portal/orders/42` load your app instead of a "not found" page. Your router gets the base path from `cfg.basePath` — or, for an Isolated app, nothing changes at all and the page's address follows the app's router. Real child pages of `/portal/` keep working.
 
-Upgrade from **BanzaiEmbed → Upgrade** in your dashboard.
-
 == Installation ==
 
-1. Install and activate BanzaiEmbed.
-2. Go to **BanzaiEmbed → Add New**, name your app and upload a zip of your build output.
-3. Copy the shortcode into any page, or add the **BanzaiEmbed App** block.
+1. Download `banzaiembed-{version}.zip` from https://github.com/JoshRobs/Banzai-Embed/releases/latest
+2. Go to **Plugins → Add New Plugin → Upload Plugin**, choose the zip, and activate BanzaiEmbed.
+3. Go to **BanzaiEmbed → Add New**, name your app and upload a zip of your build output.
+4. Copy the shortcode into any page, or add the **BanzaiEmbed App** block.
+
+To update, download the new release and upload it the same way. WordPress offers to replace the installed version, and your apps are kept.
 
 == Frequently Asked Questions ==
+
+= Is it really free? =
+
+Yes. Every feature is included, with no licence key, no account and no limits. It's GPL software, published on GitHub.
+
+= Will WordPress update it automatically? =
+
+No. BanzaiEmbed isn't listed on WordPress.org, so WordPress doesn't check it for updates. Watch the GitHub repository's releases, and upload a new zip when you want to update.
 
 = Who can upload apps? =
 
@@ -76,17 +85,9 @@ Yes. The second copy gets a suffixed ID (`app-2`). Your entry script runs once, 
 
 Not in this version — the editor shows a placeholder, and the app runs on the published page.
 
-= What does Pro add? =
-
-The Data Bridge (WordPress and logged-in user data for your app), environment variables, per-app custom CSS and JavaScript, site-wide placement, an API proxy for apps that call their own backend, and client-side routing for apps using React Router or Vue Router. See **BanzaiEmbed Pro** above. Embedding, uploading and updating apps is free and stays free.
-
-= What happens if my Pro licence expires? =
-
-Nothing breaks. Apps keep receiving their Data Bridge data and environment variables, custom CSS and JavaScript keep loading, site-wide apps keep showing, API proxy rules keep forwarding, and routed apps keep their routes. Changing those settings needs an active licence again.
-
 = My app uses React Router or Vue Router. Why do refreshes show "Page not found"? =
 
-WordPress doesn't know about your app's routes, so `/portal/settings` looks like a page that doesn't exist. With Pro, turn on **Routing** for the app and choose the page it's on; every path below that page then loads your app. Pass `cfg.basePath` to your router (`basename` in React Router, `createWebHistory()` in Vue Router), and give it a catch-all "not found" route of its own. Routing needs pretty permalinks.
+WordPress doesn't know about your app's routes, so `/portal/settings` looks like a page that doesn't exist. Turn on **Routing** for the app and choose the page it's on; every path below that page then loads your app. Pass `cfg.basePath` to your router (`basename` in React Router, `createWebHistory()` in Vue Router), and give it a catch-all "not found" route of its own. Routing needs pretty permalinks.
 
 = My app's styles change my whole site, or my theme breaks my app. =
 
@@ -94,30 +95,23 @@ Set the app's **Display** to **Isolated**. The app then gets its own page inside
 
 = My app uses a router built for the site root. Do I need to change it? =
 
-Not when the app is Isolated: inside its frame, the app's address starts at the site root, as it would on its own host. With Pro's **Routing** turned on as well, the page's address follows the app — `/play/x` in the app is `/games/play/x` on the page — so links, bookmarks, refreshes and the back button all work.
+Not when the app is Isolated: inside its frame, the app's address starts at the site root, as it would on its own host. With **Routing** turned on as well, the page's address follows the app — `/play/x` in the app is `/games/play/x` on the page — so links, bookmarks, refreshes and the back button all work.
 
 = My app calls /api/… and gets a 404 on WordPress. =
 
-That path was answered by your old host — a Netlify or Vercel function, or a dev-server proxy. With Pro, add an **API proxy** rule to the app: `/api` → `https://your-site.netlify.app/api`. Requests to `/api/…` on your WordPress site are then forwarded there, and the answers passed back. A Netlify `_redirects` line like `/api/judge /.netlify/functions/judge 200` becomes the rule `/api/judge` → `https://your-site.netlify.app/.netlify/functions/judge`.
+That path was answered by your old host — a Netlify or Vercel function, or a dev-server proxy. Add an **API proxy** rule to the app: `/api` → `https://your-site.netlify.app/api`. Requests to `/api/…` on your WordPress site are then forwarded there, and the answers passed back. A Netlify `_redirects` line like `/api/judge /.netlify/functions/judge 200` becomes the rule `/api/judge` → `https://your-site.netlify.app/.netlify/functions/judge`.
 
 = Can my app read data about the logged-in user? =
 
-With Pro, yes — and only the fields you switch on for that app. Each visitor only ever receives their own details, fetched when your app asks for them, so they never end up in a cached page.
+Yes — and only the fields you switch on for that app. Each visitor only ever receives their own details, fetched when your app asks for them, so they never end up in a cached page.
 
 == External services ==
 
 BanzaiEmbed itself loads nothing from other sites: your app's files are served from your own `wp-content/uploads` folder. Any services your own app calls are up to your app.
 
-With Pro's **API proxy**, your site forwards the requests your app makes to the paths you choose on to the URLs you enter, with the request's body, content type, Accept and Authorization headers, your app's own `X-` headers, and the visitor's IP address (as `X-Forwarded-For`). Nothing is forwarded until you add a rule, and cookies and WordPress logins never are.
+With the **API proxy**, your site forwards the requests your app makes to the paths you choose on to the URLs you enter, with the request's body, content type, Accept and Authorization headers, your app's own `X-` headers, and the visitor's IP address (as `X-Forwarded-For`). Nothing is forwarded until you add a rule, and cookies and WordPress logins never are.
 
-The plugin uses **Freemius** (freemius.com) for licensing, updates and optional usage data. It contacts Freemius only in these cases:
-
-* **If you opt in** when you first activate the plugin. It sends your name and email address, your site's URL, WordPress, PHP and plugin versions, and language, and keeps them in sync over time. Skip the opt-in and none of this is sent.
-* **When you activate a Pro licence.** It sends the licence key and the same site details, so Freemius can check the licence and deliver Pro updates, and it re-checks the licence periodically.
-* **When you open BanzaiEmbed → Upgrade,** the pricing and checkout pages load from Freemius.
-* **If you send the optional feedback form** shown when deactivating the plugin, your answer is sent.
-
-Freemius [terms of service](https://freemius.com/terms/) and [privacy policy](https://freemius.com/privacy/).
+The plugin collects no usage data and does not contact any service of its own.
 
 == Changelog ==
 

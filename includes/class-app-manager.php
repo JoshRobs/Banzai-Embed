@@ -75,27 +75,27 @@ final class App_Manager {
 			// number of pixels as a string.
 			'frame_height'      => 'auto',
 			// 'shortcode' (placed by shortcode or block) or 'site_wide'
-			// (Pro: printed on every page its rules match).
+			// (printed on every page its rules match).
 			'placement'         => 'shortcode',
 			'rules'             => self::default_rules(),
 			'created'           => 0,
 			'modified'          => 0,
-			// Pro (Data Bridge): page values, env vars, user fields.
+			// Data Bridge: page values, env vars, user fields.
 			'bridge'            => array(
 				'values' => array(),
 				'env'    => array(),
 				'user'   => array(),
 			),
-			// Pro (Routing): serve the paths below these pages to the app's router.
+			// Routing: serve the paths below these pages to the app's router.
 			'routing'           => array(
 				'enabled' => false,
 				'pages'   => array(),
 			),
-			// Pro (API proxy): { path: '/api', target: 'https://…' } rules.
+			// API proxy: { path: '/api', target: 'https://…' } rules.
 			'proxy'             => array(
 				'rules' => array(),
 			),
-			// Pro (Custom CSS & JS).
+			// Custom CSS & JS.
 			'custom_code'       => array(
 				'css'       => '',
 				'js_before' => '',

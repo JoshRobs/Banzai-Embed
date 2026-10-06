@@ -6,6 +6,10 @@ A WordPress plugin that lets developers embed pre-built Vue and React applicatio
 
 No server-side build tools required. No Node.js on the host. Works on any WordPress hosting — shared, managed, or dedicated. The plugin handles script/style enqueuing, mount point creation, and isolation so the embedded app doesn't conflict with WordPress or other plugins.
 
+## Distribution
+
+Free and open source, released on GitHub (https://github.com/JoshRobs/Banzai-Embed) as a zip attached to each release. WordPress.org rejected the plugin because it doesn't accept embedding plugins, so the planned Freemius Pro tier was dropped: every feature ships to everyone, with no licensing, no upsells and no Freemius SDK. Don't reintroduce feature gating or "Pro" labels.
+
 ## Why This Exists
 
 The current options for embedding a modern JS app in WordPress are:
@@ -27,7 +31,7 @@ WordPress developers and agencies who build client sites in WordPress but need i
 - **Storage:** Uploaded build files stored in `wp-content/uploads/banzaiembed/` organized by app slug
 - **No external dependencies:** No Node.js, no npm, no build tools on the server
 
-## MVP Scope — Free Version
+## MVP Scope — Core
 
 ### 1. App Management Admin Page
 
@@ -109,13 +113,13 @@ When the developer rebuilds their app (new features, bug fixes), they need to up
 - Asset detection runs again on the new files
 - Add a cache-busting version query parameter to enqueued assets so browsers pick up the new files
 
-## MVP Scope — Pro Features
+## MVP Scope — Advanced Features
 
-Gate these behind Freemius license check, same pattern as BanzaiStyle.
+Originally planned as a paid Pro tier behind Freemius. All of these are now free — see **Distribution** above.
 
-### 7. Data Bridge — WordPress to App (Pro)
+### 7. Data Bridge — WordPress to App
 
-The killer pro feature. Pass WordPress data into the embedded app via a global JS object:
+The killer feature. Pass WordPress data into the embedded app via a global JS object:
 
 - In the admin UI for each app, a "Data Bridge" section lets the user define key-value pairs
 - Values can be static strings, or dynamic WordPress data:
@@ -126,7 +130,7 @@ The killer pro feature. Pass WordPress data into the embedded app via a global J
 - The plugin uses `wp_localize_script` to inject this data as a JS object: `window.banzaiEmbed.myApp = { userId: 1, apiBase: '...', nonce: '...' }`
 - This is the feature that makes BanzaiEmbed genuinely powerful — a React dashboard widget can access the current user's data without any custom plugin code
 
-### 8. Multi-Page App Routing (Pro)
+### 8. Multi-Page App Routing
 
 For single-page apps with client-side routing (Vue Router, React Router):
 
@@ -134,12 +138,12 @@ For single-page apps with client-side routing (Vue Router, React Router):
 - The plugin generates WordPress rewrite rules so that subpaths of the page where the app is embedded are passed to the app instead of triggering WordPress 404s
 - Example: if the app is on `/portal/`, then `/portal/settings` and `/portal/profile` all load the same WordPress page and let the client-side router handle it
 
-### 9. Per-App Custom CSS/JS (Pro)
+### 9. Per-App Custom CSS/JS
 
 - Add custom CSS that wraps the app's mount div (useful for sizing, positioning, responsive overrides)
 - Add custom JS that runs before or after the app initializes (useful for configuration, event listeners, analytics hooks)
 
-### 10. Environment Variables (Pro)
+### 10. Environment Variables
 
 - Define per-app environment variables in the admin UI
 - Injected as `window.banzaiEmbed.myApp.env = { API_URL: '...', FEATURE_FLAG: true }`
@@ -217,9 +221,8 @@ Each app's metadata (name, slug, framework, entry files, mount ID, upload date) 
 6. Gutenberg block
 7. App update/replace flow
 8. Cache busting
-9. Pro feature gating infrastructure (same pattern as BanzaiStyle)
-10. Data Bridge (Pro)
-11. Multi-page routing (Pro)
+9. Data Bridge
+10. Multi-page routing
 
 ## Implementation Decisions (read before changing code)
 
@@ -232,9 +235,10 @@ The plugin is built. Where it departs from the spec above, it does so deliberate
 - **Builds compiled for another base** (`/` or an old path) have exact references to their own files rewritten at upload (`Path_Rewriter`) so images and fonts load, and Vite's preload helper (anchored on `"modulepreload"`) pointed at the build so lazy chunks load. Other bare base strings are never rewritten (router bases, API paths). Runtime-assembled root paths (`BASE_URL + 'x.png'`, `/draco/`) are caught by `Asset_Redirect`: a would-be 404 naming a file in an enabled app's build is 302'd to it.
 - **Managing apps** needs `manage_options` + `unfiltered_html`. Only allowlisted static file types are ever written from a zip.
 - **Forms** post to admin-post.php, not AJAX.
-- **Not built:** the "use WP's bundled React" option (a build-time decision the plugin can't make). Freemius is initialised as `bzem_fs()`; the license seam is `bzem_has_valid_license()`. Pro features live in `*__premium_only.php` files loaded from one `is__premium_only()` block in `Plugin::run()`, so Freemius strips them from the free build — never reference them from free code. Each keeps working if a licence lapses; only changing its settings needs a licence. Uninstall cleanup runs on Freemius' `after_uninstall`, not an uninstall.php (which would stop Freemius seeing uninstalls).
-- **Pro built:** site-wide placement (`Site_Wide`). Data Bridge and Environment Variables, as one card (`Data_Bridge`): page data and env are inlined; user data is fetched by the app via `cfg.user()` from an uncached endpoint, because inlining it leaks it through page caches. "Custom PHP snippets" were dropped (eval) — the `bzem/app_data` / `bzem/user_data` filters replace them. Per-app custom CSS/JS (`Custom_Code`): "after" JS waits for the app to render into its mount element — an inline script after a module tag would run before it.
-- **Pro built:** multi-page routing (`Routing`), without rewrite rules: only requests that would 404 under a routed page are re-queried for that page, so real child pages are untouched and nothing needs flushing. All spec pro features are now built.
-- **Isolated display (free, beyond the spec):** `display: 'frame'` renders an iframe whose document `Frame` serves at the app's root (`/play/x?bzem_frame=slug.post`), so global CSS stays in and root-based routers work unchanged. `frame-client.js` keeps the marker on pushed URLs and reports route/height; `frame-host.js` sizes the frame and, with Routing on, mirrors the route into the address bar. Site-wide apps are always inline.
-- **Help (free):** one template per topic in `templates/help/`, shown on BanzaiEmbed → Help (symptom list first) and in a `<dialog>` from the "?" in each card's title (`Help::button()`). When a feature changes, update its help topic too.
-- **Pro beyond the spec:** API proxy (`Api_Proxy`): per-app rules `/api` → `https://…` forward an app's same-origin backend calls (Netlify/Vercel functions) on `do_parse_request`, so unmodified apps work. Cookies and X-WP-Nonce are never forwarded and Set-Cookie never comes back; rule paths can't shadow WordPress paths or existing pages.
+- **Not built:** the "use WP's bundled React" option (a build-time decision the plugin can't make).
+- **Feature modules** (`Site_Wide`, `Data_Bridge`, `Custom_Code`, `Routing`, `Api_Proxy`) are each one class registered in `Plugin::run()`, plugging in through the core's hooks (`bzem/save_app`, `bzem/edit_placement`, `bzem/edit_cards`, `bzem/app_data`, `bzem/enqueued`). Uninstall cleanup is `bzem_uninstall()`, registered via `register_uninstall_hook()` on activation.
+- **Built:** site-wide placement (`Site_Wide`). Data Bridge and Environment Variables, as one card (`Data_Bridge`): page data and env are inlined; user data is fetched by the app via `cfg.user()` from an uncached endpoint, because inlining it leaks it through page caches. "Custom PHP snippets" were dropped (eval) — the `bzem/app_data` / `bzem/user_data` filters replace them. Per-app custom CSS/JS (`Custom_Code`): "after" JS waits for the app to render into its mount element — an inline script after a module tag would run before it.
+- **Built:** multi-page routing (`Routing`), without rewrite rules: only requests that would 404 under a routed page are re-queried for that page, so real child pages are untouched and nothing needs flushing. All spec features are now built.
+- **Isolated display (beyond the spec):** `display: 'frame'` renders an iframe whose document `Frame` serves at the app's root (`/play/x?bzem_frame=slug.post`), so global CSS stays in and root-based routers work unchanged. `frame-client.js` keeps the marker on pushed URLs and reports route/height; `frame-host.js` sizes the frame and, with Routing on, mirrors the route into the address bar. Site-wide apps are always inline.
+- **Help:** one template per topic in `templates/help/`, shown on BanzaiEmbed → Help (symptom list first) and in a `<dialog>` from the "?" in each card's title (`Help::button()`). When a feature changes, update its help topic too.
+- **Beyond the spec:** API proxy (`Api_Proxy`): per-app rules `/api` → `https://…` forward an app's same-origin backend calls (Netlify/Vercel functions) on `do_parse_request`, so unmodified apps work. Cookies and X-WP-Nonce are never forwarded and Set-Cookie never comes back; rule paths can't shadow WordPress paths or existing pages.

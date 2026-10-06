@@ -49,21 +49,12 @@ $symptoms = Help::symptoms();
 	</nav>
 
 	<?php foreach ( $topics as $id => $topic ) : ?>
-		<section id="<?php echo esc_attr( $id ); ?>" class="bzem-card bzem-help-section<?php echo $topic['pro'] ? ' bzem-card-pro' : ''; ?>">
+		<section id="<?php echo esc_attr( $id ); ?>" class="bzem-card bzem-help-section">
 			<header class="bzem-card-header">
 				<h2><span class="bzem-card-icon dashicons <?php echo esc_attr( $topic['icon'] ); ?>" aria-hidden="true"></span><?php echo esc_html( $topic['title'] ); ?></h2>
-				<?php if ( $topic['pro'] ) : ?>
-					<span class="bzem-pro-badge"><span class="dashicons dashicons-star-filled" aria-hidden="true"></span><?php esc_html_e( 'Pro', 'banzaiembed' ); ?></span>
-				<?php endif; ?>
 			</header>
 			<div class="bzem-card-body bzem-help-topic">
 				<?php Help::render_topic( $id ); ?>
-				<?php if ( $topic['pro'] && ! bzem_has_valid_license() ) : ?>
-					<p class="bzem-help-upgrade">
-						<?php esc_html_e( 'Part of BanzaiEmbed Pro.', 'banzaiembed' ); ?>
-						<a href="<?php echo esc_url( bzem_fs()->get_upgrade_url() ); ?>"><?php esc_html_e( 'View plans', 'banzaiembed' ); ?></a>
-					</p>
-				<?php endif; ?>
 				<p class="bzem-help-top"><a href="#wpbody"><?php esc_html_e( 'Back to top', 'banzaiembed' ); ?></a></p>
 			</div>
 		</section>

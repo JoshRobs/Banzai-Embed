@@ -1,6 +1,6 @@
 <?php
 /**
- * Help topic: Custom CSS & JS (Pro).
+ * Help topic: Custom CSS & JS.
  *
  * @package BanzaiEmbed
  *

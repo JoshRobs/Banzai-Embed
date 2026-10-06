@@ -18,9 +18,6 @@ defined( 'ABSPATH' ) || exit;
  * Each topic is a template in templates/help/{id}.php. They hold no logic
  * beyond the app slug for code examples, so the pop-up and the page cannot
  * say different things.
- *
- * Pro topics are listed in the free build too, marked Pro, while there is
- * a Pro to buy (License::is_pro_available()).
  */
 final class Help {
 
@@ -32,62 +29,43 @@ final class Help {
 	/**
 	 * Topics, in the order the Help screen lists them.
 	 *
-	 * @return array<string, array{title: string, icon: string, pro: bool}>
+	 * @return array<string, array{title: string, icon: string}>
 	 */
 	public static function topics() {
-		$topics = array(
+		return array(
 			'getting-started' => array(
 				'title' => __( 'Getting started', 'banzaiembed' ),
 				'icon'  => 'dashicons-flag',
-				'pro'   => false,
 			),
 			'display'         => array(
 				'title' => __( 'Display: in the page or isolated', 'banzaiembed' ),
 				'icon'  => 'dashicons-desktop',
-				'pro'   => false,
 			),
 			'entry-files'     => array(
 				'title' => __( 'Entry files', 'banzaiembed' ),
 				'icon'  => 'dashicons-media-code',
-				'pro'   => false,
 			),
 			'routing'         => array(
 				'title' => __( 'Routing', 'banzaiembed' ),
 				'icon'  => 'dashicons-randomize',
-				'pro'   => true,
 			),
 			'placement'       => array(
 				'title' => __( 'Site-wide placement', 'banzaiembed' ),
 				'icon'  => 'dashicons-location',
-				'pro'   => true,
 			),
 			'data-bridge'     => array(
 				'title' => __( 'Data Bridge and environment variables', 'banzaiembed' ),
 				'icon'  => 'dashicons-database-export',
-				'pro'   => true,
 			),
 			'api-proxy'       => array(
 				'title' => __( 'API proxy', 'banzaiembed' ),
 				'icon'  => 'dashicons-cloud',
-				'pro'   => true,
 			),
 			'custom-code'     => array(
 				'title' => __( 'Custom CSS & JS', 'banzaiembed' ),
 				'icon'  => 'dashicons-editor-code',
-				'pro'   => true,
 			),
 		);
-
-		if ( ! License::is_pro_available() ) {
-			$topics = array_filter(
-				$topics,
-				static function ( $topic ) {
-					return ! $topic['pro'];
-				}
-			);
-		}
-
-		return $topics;
 	}
 
 	/**
@@ -96,7 +74,7 @@ final class Help {
 	 * @return array<int, array{0: string, 1: string}> [ symptom, topic ID ].
 	 */
 	public static function symptoms() {
-		$symptoms = array(
+		return array(
 			array( __( 'Nothing appears where I put the shortcode or block', 'banzaiembed' ), 'entry-files' ),
 			array( __( 'Images, fonts or some screens of my app don\'t load', 'banzaiembed' ), 'getting-started' ),
 			array( __( 'My app changed my site\'s fonts, colours or spacing', 'banzaiembed' ), 'display' ),
@@ -106,16 +84,6 @@ final class Help {
 			array( __( 'My app needs to know which page it\'s on, or who is logged in', 'banzaiembed' ), 'data-bridge' ),
 			array( __( 'I want my app on every page, like a chat button', 'banzaiembed' ), 'placement' ),
 			array( __( 'I need to tweak my app\'s size or add tracking without rebuilding it', 'banzaiembed' ), 'custom-code' ),
-		);
-		$topics   = self::topics();
-
-		return array_values(
-			array_filter(
-				$symptoms,
-				static function ( $symptom ) use ( $topics ) {
-					return isset( $topics[ $symptom[1] ] );
-				}
-			)
 		);
 	}
 
@@ -185,7 +153,7 @@ final class Help {
 			</div>
 		</dialog>
 		<?php foreach ( self::topics() as $id => $topic ) : ?>
-			<template data-bzem-help-topic="<?php echo esc_attr( $id ); ?>" data-title="<?php echo esc_attr( $topic['title'] ); ?>" data-pro="<?php echo $topic['pro'] ? '1' : ''; ?>" data-url="<?php echo esc_url( self::url( $id ) ); ?>">
+			<template data-bzem-help-topic="<?php echo esc_attr( $id ); ?>" data-title="<?php echo esc_attr( $topic['title'] ); ?>" data-url="<?php echo esc_url( self::url( $id ) ); ?>">
 				<?php self::render_topic( $id, $slug ); ?>
 			</template>
 			<?php

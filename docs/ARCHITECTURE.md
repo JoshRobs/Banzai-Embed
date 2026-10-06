@@ -5,10 +5,10 @@ How BanzaiEmbed is put together, and the decisions behind it that are not obviou
 ## Layout
 
 ```
-banzaiembed.php                 bootstrap: Freemius (bzem_fs), constants, autoloader, bzem_has_valid_license(),
-                                plugins_loaded, bzem_uninstall() on Freemius' after_uninstall
+banzaiembed.php                 bootstrap: constants, autoloader, plugins_loaded, bzem_uninstall()
+                                (registered as the uninstall hook on activation)
 includes/
-  class-plugin.php              wires everything; fires bzem/init for pro modules
+  class-plugin.php              wires everything; fires bzem/init for add-ons
   class-app-manager.php         the banzaiembed_apps option, paths/URLs of builds, status, mount ID
   class-uploader.php            zip → build directory; the security boundary
   class-asset-detector.php      finds entry JS/CSS + mount ID + compiled base in a build
@@ -21,19 +21,16 @@ includes/
   class-block.php               banzaiembed/app → Embed::render(); editor data
   class-admin.php               menu, list/edit screens, admin-post handlers, notices
   class-filesystem.php          the only code that touches the disk (WP_Filesystem_Direct)
-  class-license.php             Freemius seam; fails closed
-  class-site-wide__premium_only.php   Pro: site-wide placement and its rules (not in the free build)
-  class-data-bridge__premium_only.php Pro: cfg.data, cfg.env, cfg.user() and the admin card behind them
-  class-custom-code__premium_only.php Pro: per-app CSS, and JS before/after the app
-  class-routing__premium_only.php     Pro: serves paths below a page to the app's client-side router
-  class-api-proxy__premium_only.php   Pro: forwards an app's same-origin API paths (/api/…) to its real backend
-  class-licence-ui__premium_only.php  Pro: licence status and "Activate licence" on BanzaiEmbed's screens
-vendor/freemius/                Freemius SDK (tracked; ships in the zip)
+  class-site-wide.php           site-wide placement and its rules
+  class-data-bridge.php         cfg.data, cfg.env, cfg.user() and the admin card behind them
+  class-custom-code.php         per-app CSS, and JS before/after the app
+  class-routing.php             serves paths below a page to the app's client-side router
+  class-api-proxy.php           forwards an app's same-origin API paths (/api/…) to its real backend
 blocks/app/block.json           block metadata (editor script registered by handle — no build step)
 templates/                      admin screens; templates/help/ holds one file per help topic
 assets/js, assets/css           admin.js, block.js (plain ES5, wp.* globals), styles
 tests/                          fixture builder, e2e upload script, front-end pages
-tools/build.ps1                 allowlist packager
+tools/build.ps1                 allowlist packager for the GitHub release zip
 ```
 
 Naming follows BanzaiStyle's actual convention (not the spec's `banzaiembed_` everywhere): namespace `BanzaiEmbed\`, global functions `bzem_`, constants `BZEM_`, hooks `bzem/…`, handles and CSS classes `bzem-`. The slug, text domain, option and uploads folder are `banzaiembed`.
@@ -86,7 +83,7 @@ One runtime use of the bare base is rewritten too: Vite's preload helper (`il=`m
 
 ## Root-path redirect
 
-Other URLs an app assembles at runtime can't be seen at upload: `import.meta.env.BASE_URL + 'pig.png'` (Vite compiles BASE_URL to a bare `"/"`), `` `/sounds/${name}` ``, `setDecoderPath('/draco/')`. They reach the server as `/pig.png`, and WordPress would 404. `Asset_Redirect` (free) hooks `pre_handle_404` at priority 5 — before Routing's claim, and before `redirect_canonical` could guess a post from the file name — and, when the request found nothing and its path names a file in an enabled app's current or previous build, 302s to that file.
+Other URLs an app assembles at runtime can't be seen at upload: `import.meta.env.BASE_URL + 'pig.png'` (Vite compiles BASE_URL to a bare `"/"`), `` `/sounds/${name}` ``, `setDecoderPath('/draco/')`. They reach the server as `/pig.png`, and WordPress would 404. `Asset_Redirect` hooks `pre_handle_404` at priority 5 — before Routing's claim, and before `redirect_canonical` could guess a post from the file name — and, when the request found nothing and its path names a file in an enabled app's current or previous build, 302s to that file.
 
 - Only would-be 404s, only GET/HEAD, and only paths whose last segment has a dot (WordPress slugs never do), so no page, post, feed or sitemap is ever shadowed. Root files that belong to the site (`robots.txt`, `favicon.ico`, `ads.txt`…) are never claimed.
 - Paths are tried with the build's compiled-for base removed, then as they are. Dotfile segments (so `..`, `.vite/`) and `index.html` are refused.
@@ -133,45 +130,31 @@ window.banzaiEmbed["my-app"] = { slug, baseUrl, mountId, mounts: ["app", "app-2"
 - `mounts` — every instance on the page. Repeated instances get suffixed IDs; the entry script runs once, so an app that wants several instances loops over this.
 - `baseUrl` — the build folder URL, for files the app references by path at runtime (anything from Vite's `public/` written as `/icons.svg` will otherwise 404).
 - Keyed by slug verbatim, not camel-cased as the spec sketched: `my-app` and `my_app` would collide as `myApp`.
-- `bzem/app_data` filters the object — the seam for the pro Data Bridge and environment variables.
+- `bzem/app_data` filters the object — the seam for the Data Bridge and environment variables.
 
 `id`, `class` and `style` attributes are sanitised (`[A-Za-z0-9_-]`, `sanitize_html_class`, `safecss_filter_attr`) because shortcodes can be written by Contributors. Problems (unknown slug, no build, app switched off) are shown to users who can edit posts and render nothing for visitors. An inactive app is also skipped by `prescan()`, so none of its assets load.
 
 ## Admin screens
 
-Both screens share a brand bar and framework tabs (`templates/admin-header.php`), printed above `.wrap`; the `bzem-admin-page` body class, added only on our two screens (not Freemius' pages in the same menu), removes the content gutter so the bar runs edge to edge. The list is filtered, searched and sorted server-side from query arguments (`framework`, `status`, `s`, `orderby`, `order`) — there are few enough apps that `WP_List_Table`'s pagination machinery would be dead weight, but the markup keeps its classes so the core mobile layout applies.
+Both screens share a brand bar and framework tabs (`templates/admin-header.php`), printed above `.wrap`; the `bzem-admin-page` body class, added only on our own screens, removes the content gutter so the bar runs edge to edge. The list is filtered, searched and sorted server-side from query arguments (`framework`, `status`, `s`, `orderby`, `order`) — there are few enough apps that `WP_List_Table`'s pagination machinery would be dead weight, but the markup keeps its classes so the core mobile layout applies.
 
 The on/off switch on each row is a tiny form posting to admin-post.php (`Admin::handle_toggle()`), so it works without JavaScript; admin.js submits the same form with `ajax=1` and gets JSON instead of a redirect. Read the form's URL with `getAttribute('action')`: its `<input name="action">` shadows `form.action`.
 
-**Help.** Every topic is written once, as `templates/help/{id}.php`, and shown two ways by `Help`: all together on BanzaiEmbed → Help (led by a "Fix a problem" list mapping symptoms to topics, since people arrive knowing the symptom, not the feature's name), and one at a time in a `<dialog>` from the "?" after a card's title, so the explanation is where the decision is made and an unsaved form stays put. The edit screen prints every topic into a `<template>`; admin.js clones the one asked for into the dialog. Without JavaScript the "?" is a link to the topic on the Help screen in a new tab. Topics take the app slug for code examples. Pro topics ship in the free build too (they are documentation, not features), marked Pro with an upgrade link, and are dropped when `License::is_pro_available()` is false. Add a topic by adding it to `Help::topics()` (and a symptom to `Help::symptoms()` if one fits) and calling `Help::button()` in the card it explains.
+**Help.** Every topic is written once, as `templates/help/{id}.php`, and shown two ways by `Help`: all together on BanzaiEmbed → Help (led by a "Fix a problem" list mapping symptoms to topics, since people arrive knowing the symptom, not the feature's name), and one at a time in a `<dialog>` from the "?" after a card's title, so the explanation is where the decision is made and an unsaved form stays put. The edit screen prints every topic into a `<template>`; admin.js clones the one asked for into the dialog. Without JavaScript the "?" is a link to the topic on the Help screen in a new tab. Topics take the app slug for code examples. Add a topic by adding it to `Help::topics()` (and a symptom to `Help::symptoms()` if one fits) and calling `Help::button()` in the card it explains.
 
-## Pro
+## Feature modules
 
-Freemius is initialised at the top of banzaiembed.php as `bzem_fs()` (product 40624, slug `banzaiembed`), with BanzaiStyle's structure: the rest of the file sits in the `else` of `function_exists( 'bzem_fs' )`, so when the free and premium copies are both active the second one only calls `set_basename()` instead of redeclaring every function. `tools/build.ps1` builds the premium zip; Freemius generates the free one from it.
+BanzaiEmbed is distributed free on GitHub, with no paid tier and no licensing; it was built with a Freemius Pro tier and turned away by WordPress.org, which doesn't accept plugins of this kind. Each of the larger features is still one class (plus its template), registered in `Plugin::run()`, that plugs in through hooks the core fires: `bzem/save_app`, `bzem/edit_placement`, `bzem/edit_cards`, `bzem/app_data`, `bzem/enqueued`. Keep new features to that shape; the core doesn't need to know about them.
 
-`bzem_has_valid_license()` is the single gate: `License::is_valid()` asks `bzem_fs()->can_use_premium_code()` and fails closed if the SDK is missing. `BZEM_SIMULATE_PRO` in wp-config.php forces it open (`true`) or closed (`false`) for development, whatever the real licence says. `License::PRO_AVAILABLE` is true now the plan is on sale, so the free build shows upsell cards linking to the Freemius pricing page; set it back to false if the plan is ever withdrawn.
-
-### Keeping premium code out of the free build
-
-wp.org's guideline 5 forbids locked functionality in the free plugin, so premium code must not be *in* it. Freemius builds the free version from the premium zip by dropping files whose names contain `__premium_only` and stripping `if ( bzem_fs()->is__premium_only() ) { … }` blocks. Each Pro feature is therefore one `*__premium_only.php` class (plus its template), loaded from a single such block in `Plugin::run()`, and plugs in through hooks the free code fires anyway: `bzem/save_app`, `bzem/edit_placement`, `bzem/edit_cards`, `bzem/app_data`, `bzem/enqueued`. Nothing else in the free code may name a premium class.
-
-Shared data (record fields like `placement`, `rules`) and read-only display (the list's Placement column) stay in the free code: they describe what is stored, and an app left site-wide after switching back to the free build must still be shown honestly.
+There is no uninstall.php. Cleanup is `bzem_uninstall()`, registered with `register_uninstall_hook()` on activation, which needs the plugin's own autoloader — WordPress loads the main file before calling it.
 
 ### Site-wide placement
 
-`Site_Wide` (`includes/class-site-wide__premium_only.php`) prints apps whose `placement` is `site_wide` on every front-end page their rules match — no shortcode or block. Matching apps are worked out once per request: their assets are enqueued on `wp_enqueue_scripts` (CSS in `<head>`) and their mount points printed on `wp_footer` at priority 5, through `Embed::render()`, so `window.banzaiEmbed`, unique mount IDs and active/inactive all behave as for an embedded app. Nothing prints in wp-admin, feeds, oEmbed or JSON requests.
+`Site_Wide` (`includes/class-site-wide.php`) prints apps whose `placement` is `site_wide` on every front-end page their rules match — no shortcode or block. Matching apps are worked out once per request: their assets are enqueued on `wp_enqueue_scripts` (CSS in `<head>`) and their mount points printed on `wp_footer` at priority 5, through `Embed::render()`, so `window.banzaiEmbed`, unique mount IDs and active/inactive all behave as for an embedded app. Nothing prints in wp-admin, feeds, oEmbed or JSON requests.
 
 Rules (`App_Manager::rules()`): post types (their *singular* views; empty means every page, archives and 404s included), excluded pages (matched against the queried page, or the posts page on a static-front-page site — never a term ID), and audience (everyone, logged-in, logged-out). `bzem/site_wide_matches` can override the result.
 
-Rendering checks that the premium code is present, **not** that the licence is valid: if a licence lapses, apps already placed site-wide keep showing, because a chat widget vanishing from a client's whole site overnight is the worst way to learn about a renewal. What needs a licence is *changing* placement to site-wide or editing rules — enforced in `Site_Wide::save()`, not just by the disabled form controls. Moving an app back to shortcode is always allowed. Whether Freemius still reports an expired licence as `can_use_premium_code()` depends on the plan's settings in the Freemius dashboard.
-
-There is no uninstall.php. WordPress runs that file *instead of* a registered uninstall hook, and Freemius reports uninstalls through one, so its presence would hide every uninstall from Freemius. Cleanup is `bzem_uninstall()`, on Freemius' `after_uninstall` action.
-
-### Licence activation
-
-Freemius puts "Activate License" only on the Plugins screen, and its Account page exists only after the opt-in — so someone who skipped the opt-in had no way to activate from BanzaiEmbed. `Licence_Ui` (premium build only) adds a status control to the brand bar through `bzem/header_actions`: an "Activate licence" button while unlicensed, a "Pro licence active" badge linking to the Account page once licensed; and an "Activate Licence" menu item while unlicensed, which opens the dialog on All Apps (`?bzem_activate=1`, dropped from the URL once used). Both open Freemius's own dialog (`forms/license-activation.php`), which binds to any `.activate-license-trigger.{unique affix}` element; its AJAX handler is registered on every admin page, so key checks, consent and sync all stay Freemius's. The free build has none of it — upgrading there goes through Upgrade and the premium install, where Freemius asks for the key.
-
-Data Bridge and Custom CSS & JS follow the same licence rule as site-wide placement: what is saved keeps reaching the front end if a licence lapses (an app built to read `cfg.data` would otherwise break overnight), and only saving changes needs a licence — enforced in each module's `save()`. Unlicensed, their cards render with an info notice and a disabled `<fieldset>`; a disabled fieldset posts nothing, not even the card's marker field, so the saved settings are untouched. Beyond the hooks above they use `bzem/enqueued` (inline JS before the app) and `bzem/edit_cards` (cards below the entry files).
+The Data Bridge, Routing, API proxy and Custom CSS & JS cards each carry a hidden marker field (`bzem_bridge`, `bzem_routing`, …); a module's `save()` only touches its part of the record when its marker was posted, so a form without the card (Add New) leaves the saved settings alone. Site-wide placement keys off the `placement` field the same way. Beyond the hooks above, Data Bridge and Custom CSS & JS use `bzem/enqueued` (inline JS before the app) and `bzem/edit_cards` (cards below the entry files).
 
 ### Data Bridge (and environment variables)
 
@@ -191,7 +174,7 @@ Split by whether a page cache may store the value:
 - The data object is encoded with `JSON_HEX_TAG | JSON_HEX_AMP`. Custom fields are writable by authors, and `<!--<script>` inside an inline script derails the HTML parser.
 - Keys must be JS identifiers (`cfg.data.key` must work); invalid, duplicate and over-cap (50) rows are dropped with a notice listing why.
 
-**Custom PHP snippets** (in the spec) are deliberately not built: they are `eval()` of admin-entered code, which wp.org reviewers and security scanners flag. `bzem/app_data` and `bzem/user_data` in a site's own code do the same job.
+**Custom PHP snippets** (in the spec) are deliberately not built: they are `eval()` of admin-entered code, which security scanners flag. `bzem/app_data` and `bzem/user_data` in a site's own code do the same job.
 
 ### Custom CSS & JS
 
@@ -203,8 +186,6 @@ Split by whether a page cache may store the value:
 - Both JS snippets run inside `function(cfg){…}`, so `cfg` is to hand and variables stay local. Code goes in on newlines so a trailing `//` comment cannot swallow the closing brace.
 - `</script` and `</style` are rewritten to `<\/script` / `<\/style`. That means the same inside a JS string, regex or comment and a CSS string; anywhere else the code was already broken. Nothing else is filtered: only users with `unfiltered_html` can save it.
 - 50 KB per field (it is in an autoloaded option); an oversized field keeps its previous value and the admin is told.
-
-In the free build, when `License::PRO_AVAILABLE` is true, the edit screen shows upsell cards for Data Bridge, API proxy and Custom CSS & JS in their place (as it does for Placement and Routing).
 
 ### Routing
 
@@ -219,7 +200,7 @@ In the free build, when `License::PRO_AVAILABLE` is true, the edit screen shows 
 
 So a real child page (`/portal/help/`) is never claimed — it isn't a 404 — and nothing breaks when a page is renamed or moved, because prefixes come from `get_page_uri()` on each request (only requests that would 404 pay for it). Tested under `/%postname%/` and date-based structures, which reach the 404 by different rules.
 
-Rules: pages only, not the front page or posts page (routing under the site root would claim every 404 on the site); one app per page; pretty permalinks required (the card says so otherwise). Every route returns 200 with the page's own canonical URL, so the app's router must provide its own "not found" screen. `bzem/route_match` can veto or change a match. Same lapsed-licence rule as the other pro features.
+Rules: pages only, not the front page or posts page (routing under the site root would claim every 404 on the site); one app per page; pretty permalinks required (the card says so otherwise). Every route returns 200 with the page's own canonical URL, so the app's router must provide its own "not found" screen. `bzem/route_match` can veto or change a match.
 
 ### API proxy
 
@@ -232,8 +213,6 @@ Rules: pages only, not the front page or posts page (routing under the site root
 - **Forwarded:** method, body, `Content-Type`, `Accept`, `Accept-Language`, `Authorization`, conditional and `Range` headers, `User-Agent`, and the app's own `X-` headers — plus `X-Forwarded-For/Host/Proto`. **Never:** `Cookie` (the visitor's WordPress login) or `X-WP-Nonce`. **Back:** status, body, and an allowlist of response headers; never `Set-Cookie`, which would land on the WordPress domain. With no `Cache-Control` from upstream, the answer gets `no-store` and `DONOTCACHEPAGE`.
 - `bzem/proxy_request` can change the request — e.g. add a server-side API key the browser never sees — or refuse it with a `WP_Error`.
 - Targets are entered by admins with `unfiltered_html`, so `wp_remote_request()` is used rather than the "safe" variant: a staging API on a private address is a legitimate target. Apache answers 500 for status codes it doesn't know (418); every standard code is relayed.
-
-Same lapsed-licence rule as the other pro features: rules keep forwarding, changing them needs a licence.
 
 ## What is not built
 

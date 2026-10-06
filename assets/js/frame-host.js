@@ -2,7 +2,7 @@
  * BanzaiEmbed — runs on a page with a framed app.
  *
  * Sizes each frame to its content (when its height is "auto"), and, when
- * the app is routed (Pro), keeps the page's address in step with the app's
+ * the app is routed, keeps the page's address in step with the app's
  * router: /play/x inside the frame is /games/play/x on the page, so links,
  * bookmarks and refreshes come back to the same screen.
  */

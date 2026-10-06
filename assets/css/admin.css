@@ -13,7 +13,6 @@
 	--bzem-radius: 8px;
 	--bzem-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 	--bzem-brand: linear-gradient(180deg, #14d4f8, #1af0a4);
-	--bzem-brand-h: linear-gradient(90deg, #14d4f8, #1af0a4);
 }
 
 /* The brand bar runs edge to edge, so the content area loses its gutter
@@ -843,39 +842,6 @@
 	line-height: 1;
 }
 
-/* ---------- Pro cards ---------- */
-
-/* A brand strip along the top, a tinted header and a gradient icon set
-   pro features apart from the free cards around them. */
-.bzem-card-pro {
-	position: relative;
-	border-color: #bfe9e3;
-	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 14px -6px rgba(20, 180, 170, 0.25);
-}
-
-.bzem-card-pro::before {
-	content: "";
-	position: absolute;
-	top: -1px;
-	right: -1px;
-	left: -1px;
-	height: 3px;
-	border-radius: var(--bzem-radius) var(--bzem-radius) 0 0;
-	background: var(--bzem-brand-h);
-}
-
-.bzem-card-pro .bzem-card-header {
-	border-bottom-color: #dcf3ee;
-	border-radius: var(--bzem-radius) var(--bzem-radius) 0 0;
-	background: linear-gradient(90deg, rgba(20, 212, 248, 0.07), rgba(26, 240, 164, 0.07));
-}
-
-.bzem-card-pro .bzem-card-header .bzem-card-icon {
-	background: var(--bzem-brand);
-	color: #062b2b;
-	box-shadow: 0 1px 3px rgba(6, 43, 43, 0.15);
-}
-
 .bzem-card-body {
 	padding: 20px;
 }
@@ -1041,33 +1007,7 @@
 	outline-offset: 2px;
 }
 
-/* Placement (Pro). */
-.bzem-pro-badge {
-	display: inline-flex;
-	align-items: center;
-	gap: 3px;
-	padding: 3px 10px 3px 7px;
-	border-radius: 999px;
-	background: var(--bzem-brand-h);
-	box-shadow: 0 1px 3px rgba(6, 43, 43, 0.18);
-	color: #062b2b;
-	font-size: 11px;
-	font-weight: 700;
-	line-height: 1.3;
-	letter-spacing: 0.04em;
-	text-transform: uppercase;
-}
-
-.bzem-pro-badge .dashicons {
-	width: 12px;
-	height: 12px;
-	font-size: 12px;
-}
-
-.bzem-placement-card .notice.inline {
-	margin: 0 0 16px;
-}
-
+/* Placement. */
 .bzem-choice-grid {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -1377,7 +1317,7 @@
 	list-style: disc;
 }
 
-/* ---------- Data Bridge (Pro) ---------- */
+/* ---------- Data Bridge ---------- */
 
 /* A titled section inside a card: a rule above, an accent bar before. */
 .bzem-section-title {
@@ -1402,12 +1342,8 @@
 	background: var(--bzem-accent);
 }
 
-.bzem-card-pro .bzem-section-title::before {
-	background: var(--bzem-brand);
-}
-
 /* The first section of a card needs no rule — the header already has one.
-   (A pro card's fieldset starts with its hidden marker input.) */
+   (A card's fieldset starts with its hidden marker input.) */
 .bzem-card-body > .bzem-section-title:first-child,
 .bzem-fieldset > input[type="hidden"]:first-child + .bzem-section-title {
 	margin-top: 0;
@@ -1485,7 +1421,7 @@
 	margin: 8px 0;
 }
 
-/* ---------- Custom CSS & JS (Pro) ---------- */
+/* ---------- Custom CSS & JS ---------- */
 
 .bzem-custom-code .CodeMirror {
 	height: 180px;
@@ -1502,7 +1438,7 @@
 	color: #8a2424;
 }
 
-/* A fieldset that only groups (and disables) a pro card's inputs. */
+/* A fieldset that only groups a card's inputs. */
 .bzem-fieldset {
 	min-width: 0;
 	margin: 0;
@@ -1510,7 +1446,7 @@
 	border: 0;
 }
 
-/* ---------- Routing (Pro) ---------- */
+/* ---------- Routing ---------- */
 
 .bzem-routing-card .notice.inline {
 	margin: 0 0 16px;
@@ -1542,7 +1478,7 @@
 	white-space: nowrap;
 }
 
-/* ---------- Licence status in the brand bar (Pro) ---------- */
+/* ---------- Brand bar actions ---------- */
 
 .bzem-header-actions {
 	display: flex;
@@ -1550,53 +1486,6 @@
 	align-items: center;
 	justify-content: flex-end;
 	gap: 10px;
-}
-
-.bzem-licence {
-	display: inline-flex;
-	align-items: center;
-	gap: 5px;
-}
-
-.bzem-licence .dashicons {
-	width: 16px;
-	height: 16px;
-	font-size: 16px;
-}
-
-.bzem-licence.is-active {
-	padding: 3px 12px 3px 9px;
-	border-radius: 999px;
-	background: var(--bzem-brand-h);
-	box-shadow: 0 1px 3px rgba(6, 43, 43, 0.18);
-	color: #062b2b;
-	font-size: 12px;
-	font-weight: 600;
-	text-decoration: none;
-}
-
-.bzem-licence.is-active .dashicons {
-	width: 13px;
-	height: 13px;
-	font-size: 13px;
-}
-
-a.bzem-licence.is-active:hover,
-a.bzem-licence.is-active:focus {
-	color: #062b2b;
-	filter: brightness(0.97);
-}
-
-.wp-core-ui .button.bzem-licence {
-	border-color: var(--bzem-accent);
-	color: var(--bzem-accent);
-}
-
-/* Core button styles nudge icons up; centre this one on the text. */
-.wp-core-ui .button.bzem-licence .dashicons {
-	margin: 0;
-	line-height: 1;
-	vertical-align: middle;
 }
 
 /* ---------- Help ---------- */
@@ -1685,18 +1574,6 @@ a.bzem-licence.is-active:focus {
 	margin: 0;
 	color: var(--bzem-ink);
 	font-size: 16px;
-}
-
-.bzem-help-dialog-head h2.is-pro::after {
-	content: "Pro";
-	margin-left: 8px;
-	padding: 2px 8px;
-	border-radius: 999px;
-	background: var(--bzem-brand-h);
-	color: #062b2b;
-	font-size: 11px;
-	font-weight: 600;
-	vertical-align: middle;
 }
 
 .bzem-help-dialog-close {
@@ -1899,13 +1776,6 @@ a.bzem-licence.is-active:focus {
 .bzem-help-section:target {
 	outline: 2px solid var(--bzem-accent);
 	outline-offset: 2px;
-}
-
-.bzem-help-upgrade {
-	margin-top: 16px;
-	padding: 10px 14px;
-	border-radius: var(--bzem-radius);
-	background: #f0fbf9;
 }
 
 .bzem-help-top {

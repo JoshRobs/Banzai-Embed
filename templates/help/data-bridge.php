@@ -1,6 +1,6 @@
 <?php
 /**
- * Help topic: Data Bridge and environment variables (Pro).
+ * Help topic: Data Bridge and environment variables.
  *
  * @package BanzaiEmbed
  *

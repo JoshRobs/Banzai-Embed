@@ -1,11 +1,7 @@
 node_modules/
 tests/output/
 tests/fixtures/*/
-
-# The Freemius SDK ships inside the plugin, so it is tracked. Everything else
-# in vendor/ is ignored.
-vendor/*
-!vendor/freemius/
+vendor/
 
 dist/
 *.zip
@@ -15,5 +11,5 @@ Thumbs.db
 .idea/
 .vscode/
 
-# Local wp-env overrides — holds the Freemius secret key, never commit
+# Local wp-env overrides — machine-specific, never commit
 .wp-env.override.json

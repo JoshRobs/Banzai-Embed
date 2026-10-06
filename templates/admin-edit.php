@@ -13,7 +13,6 @@
 use BanzaiEmbed\Admin;
 use BanzaiEmbed\App_Manager;
 use BanzaiEmbed\Help;
-use BanzaiEmbed\License;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -156,7 +155,7 @@ $default_mount = '' !== $record['detected_mount_id'] ? $record['detected_mount_i
 					</fieldset>
 
 					<div class="bzem-frame-options" data-bzem-frame-options>
-						<p class="description"><?php esc_html_e( 'Isolated, the app\'s CSS can\'t restyle your theme and your theme\'s can\'t restyle the app, and a router built for the site root (/, /play/…) works without changes. With Routing (Pro), the address bar follows the app as it moves between screens.', 'banzaiembed' ); ?></p>
+						<p class="description"><?php esc_html_e( 'Isolated, the app\'s CSS can\'t restyle your theme and your theme\'s can\'t restyle the app, and a router built for the site root (/, /play/…) works without changes. With Routing on, the address bar follows the app as it moves between screens.', 'banzaiembed' ); ?></p>
 						<fieldset class="bzem-field">
 							<legend><?php esc_html_e( 'Height', 'banzaiembed' ); ?></legend>
 							<div class="bzem-radio-list">
@@ -176,38 +175,15 @@ $default_mount = '' !== $record['detected_mount_id'] ? $record['detected_mount_i
 				</div>
 			</section>
 
-			<?php if ( has_action( 'bzem/edit_placement' ) ) : ?>
-				<?php
-				/**
-				 * Print the Placement card. Pro hooks in here.
-				 *
-				 * @param array $record The app being edited (defaults when new).
-				 * @param bool  $is_new Whether the app is being created.
-				 */
-				do_action( 'bzem/edit_placement', $record, $is_new );
-				?>
-			<?php elseif ( License::is_pro_available() ) : ?>
-				<section class="bzem-card bzem-card-pro bzem-upsell">
-					<header class="bzem-card-header">
-						<h2><span class="bzem-card-icon dashicons dashicons-location" aria-hidden="true"></span><?php esc_html_e( 'Placement', 'banzaiembed' ); ?><?php Help::button( 'placement' ); ?></h2>
-						<span class="bzem-pro-badge"><span class="dashicons dashicons-star-filled" aria-hidden="true"></span><?php esc_html_e( 'Pro', 'banzaiembed' ); ?></span>
-					</header>
-					<div class="bzem-card-body">
-						<p><?php esc_html_e( 'This app is placed with its shortcode or block. With BanzaiEmbed Pro, it can show site-wide instead — on every page, or only on the post types, pages and visitors you choose. Ideal for chat widgets, feedback buttons and announcement bars.', 'banzaiembed' ); ?></p>
-						<a class="button" href="<?php echo esc_url( bzem_fs()->get_upgrade_url() ); ?>"><?php esc_html_e( 'Upgrade to Pro', 'banzaiembed' ); ?></a>
-					</div>
-				</section>
-				<section class="bzem-card bzem-card-pro bzem-upsell">
-					<header class="bzem-card-header">
-						<h2><span class="bzem-card-icon dashicons dashicons-randomize" aria-hidden="true"></span><?php esc_html_e( 'Routing', 'banzaiembed' ); ?><?php Help::button( 'routing' ); ?></h2>
-						<span class="bzem-pro-badge"><span class="dashicons dashicons-star-filled" aria-hidden="true"></span><?php esc_html_e( 'Pro', 'banzaiembed' ); ?></span>
-					</header>
-					<div class="bzem-card-body">
-						<p><?php esc_html_e( 'Using React Router or Vue Router? With BanzaiEmbed Pro, links and refreshes on /portal/settings or /portal/orders/42 load your app\'s page instead of a "not found" page, and your router shows the right screen.', 'banzaiembed' ); ?></p>
-						<a class="button" href="<?php echo esc_url( bzem_fs()->get_upgrade_url() ); ?>"><?php esc_html_e( 'Upgrade to Pro', 'banzaiembed' ); ?></a>
-					</div>
-				</section>
-			<?php endif; ?>
+			<?php
+			/**
+			 * Print the Placement and Routing cards.
+			 *
+			 * @param array $record The app being edited (defaults when new).
+			 * @param bool  $is_new Whether the app is being created.
+			 */
+			do_action( 'bzem/edit_placement', $record, $is_new );
+			?>
 
 			<section class="bzem-card">
 				<header class="bzem-card-header">
@@ -302,47 +278,16 @@ $default_mount = '' !== $record['detected_mount_id'] ? $record['detected_mount_i
 				</section>
 			<?php endif; ?>
 
-			<?php if ( ! $is_new && has_action( 'bzem/edit_cards' ) ) : ?>
+			<?php if ( ! $is_new ) : ?>
 				<?php
 				/**
-				 * Print cards below the entry files. Pro modules add theirs here
-				 * and read them in `bzem/save_app`.
+				 * Print cards below the entry files: Data Bridge, API proxy and
+				 * Custom CSS & JS. Each reads its own fields in `bzem/save_app`.
 				 *
 				 * @param array $record The app being edited.
 				 */
 				do_action( 'bzem/edit_cards', $record );
 				?>
-			<?php elseif ( ! $is_new && License::is_pro_available() ) : ?>
-				<section class="bzem-card bzem-card-pro bzem-upsell">
-					<header class="bzem-card-header">
-						<h2><span class="bzem-card-icon dashicons dashicons-database-export" aria-hidden="true"></span><?php esc_html_e( 'Data Bridge', 'banzaiembed' ); ?><?php Help::button( 'data-bridge' ); ?></h2>
-						<span class="bzem-pro-badge"><span class="dashicons dashicons-star-filled" aria-hidden="true"></span><?php esc_html_e( 'Pro', 'banzaiembed' ); ?></span>
-					</header>
-					<div class="bzem-card-body">
-						<p><?php esc_html_e( 'Give your app WordPress data — the current post, custom fields, site details, environment variables, and the logged-in user with a REST API nonce — without writing any PHP.', 'banzaiembed' ); ?></p>
-						<a class="button" href="<?php echo esc_url( bzem_fs()->get_upgrade_url() ); ?>"><?php esc_html_e( 'Upgrade to Pro', 'banzaiembed' ); ?></a>
-					</div>
-				</section>
-				<section class="bzem-card bzem-card-pro bzem-upsell">
-					<header class="bzem-card-header">
-						<h2><span class="bzem-card-icon dashicons dashicons-cloud" aria-hidden="true"></span><?php esc_html_e( 'API proxy', 'banzaiembed' ); ?><?php Help::button( 'api-proxy' ); ?></h2>
-						<span class="bzem-pro-badge"><span class="dashicons dashicons-star-filled" aria-hidden="true"></span><?php esc_html_e( 'Pro', 'banzaiembed' ); ?></span>
-					</header>
-					<div class="bzem-card-body">
-						<p><?php esc_html_e( 'Does your app call fetch(\'/api/…\') on its own backend? With BanzaiEmbed Pro, forward those paths to your Netlify or Vercel functions or your own API, with no code changes and no CORS setup.', 'banzaiembed' ); ?></p>
-						<a class="button" href="<?php echo esc_url( bzem_fs()->get_upgrade_url() ); ?>"><?php esc_html_e( 'Upgrade to Pro', 'banzaiembed' ); ?></a>
-					</div>
-				</section>
-				<section class="bzem-card bzem-card-pro bzem-upsell">
-					<header class="bzem-card-header">
-						<h2><span class="bzem-card-icon dashicons dashicons-editor-code" aria-hidden="true"></span><?php esc_html_e( 'Custom CSS & JS', 'banzaiembed' ); ?><?php Help::button( 'custom-code' ); ?></h2>
-						<span class="bzem-pro-badge"><span class="dashicons dashicons-star-filled" aria-hidden="true"></span><?php esc_html_e( 'Pro', 'banzaiembed' ); ?></span>
-					</header>
-					<div class="bzem-card-body">
-						<p><?php esc_html_e( 'Add CSS that loads with this app, and JavaScript that runs before it starts or once it has rendered — for sizing, configuration, event listeners and analytics.', 'banzaiembed' ); ?></p>
-						<a class="button" href="<?php echo esc_url( bzem_fs()->get_upgrade_url() ); ?>"><?php esc_html_e( 'Upgrade to Pro', 'banzaiembed' ); ?></a>
-					</div>
-				</section>
 			<?php endif; ?>
 		</div>
 

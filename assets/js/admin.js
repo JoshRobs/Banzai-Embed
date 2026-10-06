@@ -265,15 +265,13 @@
 			return;
 		}
 
-		// :disabled covers a card locked for want of a licence — CodeMirror
-		// would otherwise make it editable again.
-		document.querySelectorAll(".bzem-code-editor:not(:disabled)").forEach(function (area) {
+		document.querySelectorAll(".bzem-code-editor").forEach(function (area) {
 			wp.codeEditor.initialize(area, settings[area.getAttribute("data-mode")]);
 		});
 	}
 
 	/**
-	 * Placement (Pro): show the rules only for site-wide apps, the post type
+	 * Placement: show the rules only for site-wide apps, the post type
 	 * list only when limiting to post types, and filter long page lists.
 	 * Without this everything is simply visible.
 	 */
@@ -333,10 +331,6 @@
 	}
 
 	/**
-	 * Routing (Pro): show the pages and usage only while routing is on, and
-	 * filter long page lists. Without this everything is simply visible.
-	 */
-	/**
 	 * Help pop-ups: the "?" on a card opens its topic in a dialog instead of
 	 * the Help screen, so an unsaved form stays as it is. Without JavaScript,
 	 * or without <dialog>, the "?" is a link to the Help screen in a new tab.
@@ -367,7 +361,6 @@
 
 			event.preventDefault();
 			title.textContent = template.getAttribute("data-title");
-			title.classList.toggle("is-pro", template.getAttribute("data-pro") === "1");
 			body.innerHTML = "";
 			body.appendChild(template.content.cloneNode(true));
 			more.href = template.getAttribute("data-url");
@@ -418,6 +411,10 @@
 		});
 	}
 
+	/**
+	 * Routing: show the pages and usage only while routing is on, and
+	 * filter long page lists. Without this everything is simply visible.
+	 */
 	function initRouting() {
 		var toggle = document.querySelector("[data-bzem-routing-toggle]");
 		var details = document.querySelector("[data-bzem-routing-details]");
@@ -454,31 +451,6 @@
 		filter.addEventListener("keydown", function (event) {
 			if (event.key === "Enter") {
 				event.preventDefault();
-			}
-		});
-	}
-
-	/**
-	 * Pro: the "Activate Licence" menu item links here with ?bzem_activate=1.
-	 * Open Freemius's dialog through the header button, once — the param is
-	 * dropped so a refresh doesn't reopen it. Freemius binds the button's
-	 * click handler in a footer script, so wait for the page to finish.
-	 */
-	function initLicence() {
-		var params = new URLSearchParams(window.location.search);
-
-		if (!params.has("bzem_activate")) {
-			return;
-		}
-
-		params.delete("bzem_activate");
-		window.history.replaceState(null, "", window.location.pathname + (params.toString() ? "?" + params : "") + window.location.hash);
-
-		window.addEventListener("load", function () {
-			var button = document.querySelector("[data-bzem-activate]");
-
-			if (button) {
-				button.click();
 			}
 		});
 	}
@@ -571,7 +543,6 @@
 		initHelp();
 		initDisplay();
 		initRouting();
-		initLicence();
 		initBridge();
 	});
 })();

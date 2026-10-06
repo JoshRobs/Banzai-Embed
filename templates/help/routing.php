@@ -1,6 +1,6 @@
 <?php
 /**
- * Help topic: Routing (Pro).
+ * Help topic: Routing.
  *
  * @package BanzaiEmbed
  *

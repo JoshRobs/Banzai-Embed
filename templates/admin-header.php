@@ -28,8 +28,7 @@ foreach ( App_Manager::FRAMEWORKS as $fw ) {
 	<div class="bzem-header-actions">
 		<?php
 		/**
-		 * Print controls at the right of the brand bar. Pro shows the
-		 * licence status here.
+		 * Print controls at the right of the brand bar.
 		 */
 		do_action( 'bzem/header_actions' );
 		?>
